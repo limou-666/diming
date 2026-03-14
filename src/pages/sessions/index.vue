@@ -5,7 +5,7 @@
     <view class="hero panel">
       <view class="hero__copy">
         <text class="hero__eyebrow">{{ profile?.nickname || 'Companion AI' }}</text>
-        <text class="hero__title">今天有 {{ sessions.length }} 段活跃会话正在推进</text>
+        <text class="hero__title">今天有 {{ total }} 段活跃会话正在推进</text>
         <text class="hero__description">会话列表支持下拉刷新、上拉加载，点击即可进入完整聊天详情。</text>
       </view>
       <view class="hero__stats">
@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { onPullDownRefresh, onReachBottom, onShow } from '@dcloudio/uni-app';
 import AppHeader from '@/components/AppHeader.vue';
 import BottomDock from '@/components/BottomDock.vue';
@@ -59,12 +59,8 @@ import { fetchProfile } from '@/mock';
 
 const profile = ref(null);
 const initialized = ref(false);
-const { sessions, loading, hasMore, loadInitial, refresh, loadMore } = usePagedSessions(6);
-
-const unreadTotal = computed(() => sessions.value.reduce((sum, item) => sum + item.unreadCount, 0));
-const activeCount = computed(
-  () => sessions.value.filter((item) => item.contact && item.contact.status === '在线').length
-);
+const { sessions, total, unreadTotal, activeCount, loading, hasMore, loadInitial, refresh, loadMore } =
+  usePagedSessions(6);
 
 async function loadProfile() {
   profile.value = await fetchProfile();

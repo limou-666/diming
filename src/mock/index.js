@@ -79,6 +79,22 @@ export async function fetchPagedConversations(page = 1, pageSize = 6) {
   };
 }
 
+export async function fetchConversationOverview() {
+  await wait(120);
+  const total = conversationState.length;
+  const unreadTotal = conversationState.reduce((sum, item) => sum + (item.unreadCount || 0), 0);
+  const activeCount = conversationState.reduce((sum, item) => {
+    const contact = getConversationContact(item);
+    return sum + (contact?.status === '在线' ? 1 : 0);
+  }, 0);
+
+  return {
+    total,
+    unreadTotal,
+    activeCount
+  };
+}
+
 export async function fetchConversationBundle(conversationId) {
   await wait(180);
   const conversation = conversationState.find((item) => item.id === conversationId);
