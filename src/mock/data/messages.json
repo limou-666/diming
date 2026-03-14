@@ -1,0 +1,279 @@
+{
+  "cv_001": [
+    {
+      "id": "msg_001",
+      "senderId": "ct_001",
+      "type": "text",
+      "content": "今晚想继续聊未来城市，还是先把阅读清单排一下？",
+      "createdAt": "2026-03-13T20:56:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_002",
+      "senderId": "self_001",
+      "type": "text",
+      "content": "给我推荐一本关于未来城市的书。",
+      "createdAt": "2026-03-13T20:58:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_003",
+      "senderId": "ct_001",
+      "type": "text",
+      "content": "如果你想先打开视野，我会先推《未来简史》；如果更偏城市治理，我再给你补两本更具体的。",
+      "createdAt": "2026-03-13T20:59:00+08:00",
+      "status": "sent",
+      "feedback": true
+    },
+    {
+      "id": "msg_004",
+      "senderId": "ct_001",
+      "type": "image",
+      "imageUrl": "/static/mock/book-future.svg",
+      "caption": "先发你这张封面，方便你判断气质。",
+      "createdAt": "2026-03-13T21:00:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_005",
+      "senderId": "self_001",
+      "type": "text",
+      "content": "再来一本更偏城市空间与生活方式的。",
+      "createdAt": "2026-03-13T21:01:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_006",
+      "senderId": "ct_001",
+      "type": "text",
+      "content": "那就看《看不见的城市》，它更适合激发空间想象。",
+      "createdAt": "2026-03-13T21:02:00+08:00",
+      "status": "sent"
+    }
+  ],
+  "cv_002": [
+    {
+      "id": "msg_101",
+      "senderId": "self_001",
+      "type": "text",
+      "content": "我希望聊天页看起来更像陪伴型产品，不要太工具。",
+      "createdAt": "2026-03-13T20:19:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_102",
+      "senderId": "ct_002",
+      "type": "text",
+      "content": "那就把背景、气泡和输入区做成同一套暖白到浅绿的层次，不要纯白。",
+      "createdAt": "2026-03-13T20:23:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_103",
+      "senderId": "ct_002",
+      "type": "image",
+      "imageUrl": "/static/mock/smart-city.svg",
+      "caption": "我把你那张聊天页参考图拆成了 3 个视觉层级。",
+      "createdAt": "2026-03-13T20:31:00+08:00",
+      "status": "sent"
+    }
+  ],
+  "cv_003": [
+    {
+      "id": "msg_201",
+      "senderId": "ct_003",
+      "type": "text",
+      "content": "你这次先别做太多入口，先确保主流程可走通。",
+      "createdAt": "2026-03-13T18:29:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_202",
+      "senderId": "self_001",
+      "type": "text",
+      "content": "那 MVP 先留哪几个页面？",
+      "createdAt": "2026-03-13T18:33:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_203",
+      "senderId": "ct_003",
+      "type": "text",
+      "content": "如果只做 MVP，就先保留会话列表、聊天页和个人中心。",
+      "createdAt": "2026-03-13T18:37:00+08:00",
+      "status": "sent"
+    }
+  ],
+  "cv_004": [
+    {
+      "id": "msg_301",
+      "senderId": "self_001",
+      "type": "text",
+      "content": "发送成功后我想要一个很轻的反馈，不想做得太吵。",
+      "createdAt": "2026-03-13T17:44:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_302",
+      "senderId": "ct_004",
+      "type": "text",
+      "content": "那就做一段 220ms 的浮起动画，音效不要超过 0.2 秒。",
+      "createdAt": "2026-03-13T17:46:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_303",
+      "senderId": "ct_004",
+      "type": "image",
+      "imageUrl": "/static/mock/playlist-cover.svg",
+      "caption": "我把发送成功的轻提示节奏发你了。",
+      "createdAt": "2026-03-13T17:52:00+08:00",
+      "status": "sent"
+    }
+  ],
+  "cv_005": [
+    {
+      "id": "msg_401",
+      "senderId": "ct_005",
+      "type": "text",
+      "content": "联系人详情页第一屏只放核心身份、状态和动作按钮。",
+      "createdAt": "2026-03-13T16:39:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_402",
+      "senderId": "self_001",
+      "type": "text",
+      "content": "那完整信息应该怎么分区？",
+      "createdAt": "2026-03-13T16:43:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_403",
+      "senderId": "ct_005",
+      "type": "text",
+      "content": "联系人详情页的信息分区，我建议做成 3 个层级。",
+      "createdAt": "2026-03-13T16:48:00+08:00",
+      "status": "sent"
+    }
+  ],
+  "cv_006": [
+    {
+      "id": "msg_501",
+      "senderId": "self_001",
+      "type": "text",
+      "content": "个人中心我想更克制，不要像设置页堆按钮。",
+      "createdAt": "2026-03-13T15:24:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_502",
+      "senderId": "ct_006",
+      "type": "text",
+      "content": "那入口文案就不要太功能化，可以用更轻一点的描述。",
+      "createdAt": "2026-03-13T15:29:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_503",
+      "senderId": "ct_006",
+      "type": "text",
+      "content": "个人中心的入口说明我已经改得更轻了。",
+      "createdAt": "2026-03-13T15:32:00+08:00",
+      "status": "sent"
+    }
+  ],
+  "cv_007": [
+    {
+      "id": "msg_601",
+      "senderId": "self_001",
+      "type": "text",
+      "content": "聊天页长一些会不会卡？",
+      "createdAt": "2026-03-13T13:56:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_602",
+      "senderId": "ct_007",
+      "type": "text",
+      "content": "长列表先做分页 + 锚点滚动，收益会比复杂虚拟化更稳定。",
+      "createdAt": "2026-03-13T14:05:00+08:00",
+      "status": "sent"
+    }
+  ],
+  "cv_008": [
+    {
+      "id": "msg_701",
+      "senderId": "ct_008",
+      "type": "text",
+      "content": "用户在个人中心容易迷路，说明入口命名还不够清楚。",
+      "createdAt": "2026-03-13T12:11:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_702",
+      "senderId": "ct_008",
+      "type": "text",
+      "content": "个人中心功能入口不要超过 6 个首屏项。",
+      "createdAt": "2026-03-13T12:20:00+08:00",
+      "status": "sent"
+    }
+  ],
+  "cv_009": [
+    {
+      "id": "msg_801",
+      "senderId": "self_001",
+      "type": "text",
+      "content": "会话列表能不能加点轻互动，但不要打扰阅读？",
+      "createdAt": "2026-03-12T22:05:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_802",
+      "senderId": "ct_009",
+      "type": "text",
+      "content": "我给会话列表补了一个轻量互动标签方案。",
+      "createdAt": "2026-03-12T22:12:00+08:00",
+      "status": "sent"
+    }
+  ],
+  "cv_010": [
+    {
+      "id": "msg_901",
+      "senderId": "ct_010",
+      "type": "text",
+      "content": "新用户第一次进入时，理解界面结构比看到全部能力更重要。",
+      "createdAt": "2026-03-12T16:58:00+08:00",
+      "status": "sent"
+    },
+    {
+      "id": "msg_902",
+      "senderId": "ct_010",
+      "type": "text",
+      "content": "新用户引导最好只保留 3 步，不要贪多。",
+      "createdAt": "2026-03-12T17:03:00+08:00",
+      "status": "sent"
+    }
+  ],
+  "cv_011": [
+    {
+      "id": "msg_1001",
+      "senderId": "ct_011",
+      "type": "image",
+      "imageUrl": "/static/mock/travel-board.svg",
+      "caption": "我发你 1 张更适合图片消息的暖调插图。",
+      "createdAt": "2026-03-11T19:40:00+08:00",
+      "status": "sent"
+    }
+  ],
+  "cv_012": [
+    {
+      "id": "msg_1101",
+      "senderId": "ct_012",
+      "type": "text",
+      "content": "会话列表先看未读、活跃和回访率三个指标就够了。",
+      "createdAt": "2026-03-10T11:25:00+08:00",
+      "status": "sent"
+    }
+  ]
+}

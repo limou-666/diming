@@ -1,0 +1,27 @@
+{
+  "name": "companion-ai-demo",
+  "appid": "__UNI__COMPANION_AI_DEMO",
+  "description": "Cross-platform mock chat demo built with uni-app and Vue 3.",
+  "vueVersion": "3",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "app-plus": {
+    "usingComponents": true
+  },
+  "h5": {
+    "title": "Companion AI",
+    "router": {
+      "base": "/"
+    }
+  },
+  "mp-weixin": {
+    "appid": "touristappid",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "postcss": true,
+      "minified": true
+    }
+  }
+}

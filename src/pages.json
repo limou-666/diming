@@ -1,0 +1,33 @@
+{
+  "easycom": {
+    "autoscan": true,
+    "custom": {}
+  },
+  "globalStyle": {
+    "navigationStyle": "custom",
+    "backgroundColor": "#F8F2E8",
+    "backgroundTextStyle": "dark"
+  },
+  "pages": [
+    {
+      "path": "pages/sessions/index",
+      "style": {
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/chat/index",
+      "style": {
+        "disableScroll": true
+      }
+    },
+    {
+      "path": "pages/contact/index",
+      "style": {}
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {}
+    }
+  ]
+}

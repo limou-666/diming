@@ -1,0 +1,398 @@
+[
+  {
+    "id": "ct_001",
+    "nickname": "Companion AI",
+    "signature": "把模糊想法聊成可以执行的计划。",
+    "level": "L5 智识伙伴",
+    "role": "未来城市研究助理",
+    "location": "雄安新区",
+    "status": "在线",
+    "lastActive": "刚刚在线",
+    "palette": ["#82d8bc", "#f0ca93"],
+    "accent": "#5a3418",
+    "motto": "先理解，再给答案。",
+    "tags": ["产品共创", "趋势研究", "阅读推荐"],
+    "skills": ["多轮对话", "结构整理", "灵感生成"],
+    "stats": {
+      "conversations": 128,
+      "images": 42,
+      "streak": 16,
+      "replyRate": "99%"
+    },
+    "bio": "擅长把复杂问题拆成清晰步骤，也会给出具体可落地的建议。",
+    "detailList": [
+      { "label": "常聊主题", "value": "未来城市 / 产品设计 / 阅读计划" },
+      { "label": "回复风格", "value": "直接、温和、偏结构化" },
+      { "label": "擅长形式", "value": "文字总结 + 图片示意" }
+    ],
+    "moments": [
+      { "label": "最近在做", "value": "整理一份未来城市阅读地图" },
+      { "label": "互动偏好", "value": "适合先说目标，再逐步补约束" },
+      { "label": "备注", "value": "对书籍推荐和灵感拆解尤其擅长" }
+    ],
+    "conversationId": "cv_001"
+  },
+  {
+    "id": "ct_002",
+    "nickname": "林岚",
+    "signature": "把空间感知翻译成更柔和的界面。",
+    "level": "L4 视觉策展人",
+    "role": "体验设计师",
+    "location": "上海",
+    "status": "忙碌中",
+    "lastActive": "12 分钟前",
+    "palette": ["#f2c69a", "#f7e8d0"],
+    "accent": "#704222",
+    "motto": "界面不是图层，是情绪秩序。",
+    "tags": ["视觉语言", "品牌气质", "界面排版"],
+    "skills": ["动效建议", "配色基调", "卡片设计"],
+    "stats": {
+      "conversations": 96,
+      "images": 68,
+      "streak": 8,
+      "replyRate": "94%"
+    },
+    "bio": "经常提供更克制的视觉方案，也会指出过度装饰的问题。",
+    "detailList": [
+      { "label": "常用工具", "value": "Figma / Photoshop / Framer" },
+      { "label": "审美偏好", "value": "暖白、浅绿、低饱和橙" },
+      { "label": "节奏", "value": "先看整体氛围，再修局部细节" }
+    ],
+    "moments": [
+      { "label": "最近在做", "value": "整理一组陪伴型产品界面参考" },
+      { "label": "反馈方式", "value": "会给出替代方案，而不是只说问题" },
+      { "label": "备注", "value": "适合聊界面节奏和气质统一" }
+    ],
+    "conversationId": "cv_002"
+  },
+  {
+    "id": "ct_003",
+    "nickname": "周野",
+    "signature": "行动优先，方案必须能上线。",
+    "level": "L4 产品经理",
+    "role": "增长策略顾问",
+    "location": "深圳",
+    "status": "在线",
+    "lastActive": "5 分钟前",
+    "palette": ["#9cc7ff", "#d9edff"],
+    "accent": "#2c4f7f",
+    "motto": "如果没有下一步，那就不是结论。",
+    "tags": ["需求拆解", "MVP", "指标框架"],
+    "skills": ["优先级梳理", "版本规划", "转化设计"],
+    "stats": {
+      "conversations": 84,
+      "images": 18,
+      "streak": 11,
+      "replyRate": "97%"
+    },
+    "bio": "说话节奏快，但擅长在限制条件里给出现实路径。",
+    "detailList": [
+      { "label": "关注点", "value": "上线速度 / 数据闭环 / 复用效率" },
+      { "label": "回复风格", "value": "短句、结论先行" },
+      { "label": "合作特点", "value": "会把模糊需求拆成可排期模块" }
+    ],
+    "moments": [
+      { "label": "最近在做", "value": "整理对话产品的新手引导模板" },
+      { "label": "互动偏好", "value": "喜欢先看目标和边界" },
+      { "label": "备注", "value": "适合聊需求优先级和流程设计" }
+    ],
+    "conversationId": "cv_003"
+  },
+  {
+    "id": "ct_004",
+    "nickname": "Sia",
+    "signature": "声音和节奏，也能让界面更有温度。",
+    "level": "L3 体验编曲师",
+    "role": "音频设计师",
+    "location": "成都",
+    "status": "离开",
+    "lastActive": "1 小时前",
+    "palette": ["#c7b2ff", "#f2e7ff"],
+    "accent": "#533c79",
+    "motto": "每个反馈，都该有呼吸感。",
+    "tags": ["提示音", "反馈设计", "沉浸节奏"],
+    "skills": ["音效方向", "交互节拍", "品牌听感"],
+    "stats": {
+      "conversations": 53,
+      "images": 7,
+      "streak": 5,
+      "replyRate": "88%"
+    },
+    "bio": "会用节奏感去解释交互，也很关注用户完成动作后的情绪延续。",
+    "detailList": [
+      { "label": "强项", "value": "反馈音效、转场节奏、按钮呼吸" },
+      { "label": "工作方式", "value": "先定义场景，再定声音密度" },
+      { "label": "提醒", "value": "过度提示会削弱高级感" }
+    ],
+    "moments": [
+      { "label": "最近在做", "value": "对话发送音与成功反馈的节奏测试" },
+      { "label": "互动偏好", "value": "更喜欢描述场景而不是只说功能" },
+      { "label": "备注", "value": "适合聊反馈细节和动画节奏" }
+    ],
+    "conversationId": "cv_004"
+  },
+  {
+    "id": "ct_005",
+    "nickname": "Atlas",
+    "signature": "地图和导航，都是信息层级的投影。",
+    "level": "L4 信息架构师",
+    "role": "导航系统设计师",
+    "location": "杭州",
+    "status": "在线",
+    "lastActive": "刚刚在线",
+    "palette": ["#83d6d1", "#dff7f5"],
+    "accent": "#1f5f5d",
+    "motto": "路径越清楚，焦虑越少。",
+    "tags": ["信息结构", "导航层级", "任务流"],
+    "skills": ["结构梳理", "路径规划", "模块命名"],
+    "stats": {
+      "conversations": 75,
+      "images": 25,
+      "streak": 9,
+      "replyRate": "96%"
+    },
+    "bio": "喜欢把复杂页面拆成明确的任务路径，也会指出命名不清的问题。",
+    "detailList": [
+      { "label": "专长", "value": "列表层级 / 引导路径 / 入口组织" },
+      { "label": "风格", "value": "逻辑清楚，偏理性" },
+      { "label": "合作方式", "value": "常用流程图和分层说明" }
+    ],
+    "moments": [
+      { "label": "最近在做", "value": "整理联系人详情页的信息分区" },
+      { "label": "互动偏好", "value": "先给页面地图，再看细节" },
+      { "label": "备注", "value": "适合聊模块入口和页面组织" }
+    ],
+    "conversationId": "cv_005"
+  },
+  {
+    "id": "ct_006",
+    "nickname": "米洛",
+    "signature": "任何一段内容，都值得更好的叙述秩序。",
+    "level": "L3 内容编辑",
+    "role": "叙事文案",
+    "location": "广州",
+    "status": "在线",
+    "lastActive": "23 分钟前",
+    "palette": ["#f0b8a8", "#fde7e0"],
+    "accent": "#7d4334",
+    "motto": "文案是界面的第二层肌理。",
+    "tags": ["界面文案", "品牌语气", "信息表达"],
+    "skills": ["标题优化", "提示文案", "内容分层"],
+    "stats": {
+      "conversations": 61,
+      "images": 4,
+      "streak": 6,
+      "replyRate": "91%"
+    },
+    "bio": "擅长把功能语言改写得更自然，也会避免过度营销式表述。",
+    "detailList": [
+      { "label": "长项", "value": "标题语气 / 空状态文案 / CTA 语义" },
+      { "label": "风格", "value": "克制、清楚、保留余味" },
+      { "label": "提醒", "value": "一句文案只承担一个目标" }
+    ],
+    "moments": [
+      { "label": "最近在做", "value": "润色个人中心与空状态文案" },
+      { "label": "互动偏好", "value": "提供场景和语气更容易出结果" },
+      { "label": "备注", "value": "适合聊微文案和按钮语言" }
+    ],
+    "conversationId": "cv_006"
+  },
+  {
+    "id": "ct_007",
+    "nickname": "诺里",
+    "signature": "性能不是最后优化，是一开始的边界。",
+    "level": "L5 性能工程师",
+    "role": "前端基础设施",
+    "location": "北京",
+    "status": "在线",
+    "lastActive": "2 分钟前",
+    "palette": ["#b7d4b1", "#eff8eb"],
+    "accent": "#41613a",
+    "motto": "顺滑感来自克制，不来自堆料。",
+    "tags": ["首屏优化", "渲染性能", "资源策略"],
+    "skills": ["列表优化", "懒加载", "状态管理"],
+    "stats": {
+      "conversations": 89,
+      "images": 9,
+      "streak": 15,
+      "replyRate": "98%"
+    },
+    "bio": "很关注跨平台成本，喜欢用简单稳妥的方式解决体验卡顿。",
+    "detailList": [
+      { "label": "关注点", "value": "分页、懒加载、滚动容器稳定性" },
+      { "label": "风格", "value": "稳妥、少魔法、重验证" },
+      { "label": "合作方式", "value": "先找瓶颈，再做局部优化" }
+    ],
+    "moments": [
+      { "label": "最近在做", "value": "优化聊天长列表的滚动体验" },
+      { "label": "互动偏好", "value": "更喜欢先拿到结构和数据量级" },
+      { "label": "备注", "value": "适合聊性能和状态收敛" }
+    ],
+    "conversationId": "cv_007"
+  },
+  {
+    "id": "ct_008",
+    "nickname": "Juno",
+    "signature": "把用户的犹豫，翻译成更好的引导。",
+    "level": "L4 研究员",
+    "role": "用户体验研究",
+    "location": "南京",
+    "status": "离开",
+    "lastActive": "2 小时前",
+    "palette": ["#f7d58b", "#fff3cf"],
+    "accent": "#7f5c14",
+    "motto": "每一次停顿，都是信息缺失。",
+    "tags": ["可用性测试", "访谈洞察", "行为观察"],
+    "skills": ["路径诊断", "用户问题归因", "文案验证"],
+    "stats": {
+      "conversations": 47,
+      "images": 16,
+      "streak": 4,
+      "replyRate": "90%"
+    },
+    "bio": "常从用户犹豫点切入，很适合一起梳理页面入口和功能理解成本。",
+    "detailList": [
+      { "label": "常用方法", "value": "5 秒测试 / 任务观察 / 访谈复盘" },
+      { "label": "风格", "value": "先找阻力点，再提建议" },
+      { "label": "提醒", "value": "过多功能入口会增加理解成本" }
+    ],
+    "moments": [
+      { "label": "最近在做", "value": "梳理个人中心常用功能入口" },
+      { "label": "互动偏好", "value": "最好给出页面截图或口头路径" },
+      { "label": "备注", "value": "适合聊用户犹豫点和引导" }
+    ],
+    "conversationId": "cv_008"
+  },
+  {
+    "id": "ct_009",
+    "nickname": "Vera",
+    "signature": "社群关系也能被界面温柔地承接。",
+    "level": "L3 社群策划",
+    "role": "关系运营",
+    "location": "苏州",
+    "status": "在线",
+    "lastActive": "18 分钟前",
+    "palette": ["#f7c8d7", "#fff0f6"],
+    "accent": "#8a4162",
+    "motto": "关系密度，来自持续而轻巧的互动。",
+    "tags": ["关系运营", "用户活跃", "内容策划"],
+    "skills": ["活动创意", "活跃节奏", "关系维护"],
+    "stats": {
+      "conversations": 58,
+      "images": 12,
+      "streak": 7,
+      "replyRate": "93%"
+    },
+    "bio": "擅长把冷启动阶段的互动做得更轻，更适合陪伴型产品的长期关系感。",
+    "detailList": [
+      { "label": "擅长", "value": "互动节奏 / 用户活跃 / 社群氛围" },
+      { "label": "风格", "value": "热情但不打扰" },
+      { "label": "提醒", "value": "别让运营入口压过主线对话" }
+    ],
+    "moments": [
+      { "label": "最近在做", "value": "设计会话列表的轻互动标签" },
+      { "label": "互动偏好", "value": "喜欢先看产品关系目标" },
+      { "label": "备注", "value": "适合聊活跃机制和陪伴节奏" }
+    ],
+    "conversationId": "cv_009"
+  },
+  {
+    "id": "ct_010",
+    "nickname": "青澈",
+    "signature": "复杂信息也能被讲得很轻。",
+    "level": "L4 教学设计师",
+    "role": "知识体验策展",
+    "location": "武汉",
+    "status": "忙碌中",
+    "lastActive": "46 分钟前",
+    "palette": ["#9dd8f4", "#e7f7ff"],
+    "accent": "#215c75",
+    "motto": "理解成本越低，行动越自然。",
+    "tags": ["知识组织", "学习体验", "内容编排"],
+    "skills": ["知识地图", "步骤分解", "表达降噪"],
+    "stats": {
+      "conversations": 72,
+      "images": 21,
+      "streak": 10,
+      "replyRate": "95%"
+    },
+    "bio": "善于把流程讲明白，也擅长让新用户更快理解产品结构。",
+    "detailList": [
+      { "label": "优势", "value": "复杂流程讲解 / 学习路径 / 卡片结构" },
+      { "label": "风格", "value": "简洁、耐心、层次明确" },
+      { "label": "提醒", "value": "新手流程不要一次性塞太满" }
+    ],
+    "moments": [
+      { "label": "最近在做", "value": "整理新用户引导的知识地图" },
+      { "label": "互动偏好", "value": "喜欢先知道用户现有理解程度" },
+      { "label": "备注", "value": "适合聊 onboarding 和说明结构" }
+    ],
+    "conversationId": "cv_010"
+  },
+  {
+    "id": "ct_011",
+    "nickname": "Aki",
+    "signature": "画面要好看，但更要有速度感。",
+    "level": "L3 插画师",
+    "role": "视觉内容创作者",
+    "location": "厦门",
+    "status": "在线",
+    "lastActive": "8 分钟前",
+    "palette": ["#f8c98f", "#ffe8cc"],
+    "accent": "#8b5220",
+    "motto": "插画应该服务情绪，不抢焦点。",
+    "tags": ["插画方向", "封面图", "情绪表达"],
+    "skills": ["情绪板", "封面构图", "场景色调"],
+    "stats": {
+      "conversations": 40,
+      "images": 57,
+      "streak": 6,
+      "replyRate": "89%"
+    },
+    "bio": "擅长为聊天应用提供轻量视觉情绪，也会提醒不要让装饰干扰阅读。",
+    "detailList": [
+      { "label": "擅长", "value": "封面草图 / 插图情绪 / 轻插画风格" },
+      { "label": "风格", "value": "暖、轻、保留呼吸感" },
+      { "label": "提醒", "value": "阅读区应该永远先于装饰" }
+    ],
+    "moments": [
+      { "label": "最近在做", "value": "生成一组对话图片消息插图" },
+      { "label": "互动偏好", "value": "先给关键词和氛围图更容易出图" },
+      { "label": "备注", "value": "适合聊图片消息和视觉插图" }
+    ],
+    "conversationId": "cv_011"
+  },
+  {
+    "id": "ct_012",
+    "nickname": "博时",
+    "signature": "数据不是结论，是发现问题的入口。",
+    "level": "L4 数据分析师",
+    "role": "增长分析",
+    "location": "西安",
+    "status": "在线",
+    "lastActive": "14 分钟前",
+    "palette": ["#d0c6f4", "#f1edff"],
+    "accent": "#54467c",
+    "motto": "先看趋势，再看单点异常。",
+    "tags": ["埋点设计", "指标看板", "留存分析"],
+    "skills": ["数据面板", "转化漏斗", "实验评估"],
+    "stats": {
+      "conversations": 67,
+      "images": 10,
+      "streak": 13,
+      "replyRate": "92%"
+    },
+    "bio": "会把抽象的增长问题落成几个关键指标，也会指出哪些数据没必要采集。",
+    "detailList": [
+      { "label": "擅长", "value": "核心指标定义 / 实验评估 / 面板设计" },
+      { "label": "风格", "value": "理性，强调因果边界" },
+      { "label": "提醒", "value": "不要为了看板而看板" }
+    ],
+    "moments": [
+      { "label": "最近在做", "value": "规划会话列表的活跃度指标" },
+      { "label": "互动偏好", "value": "先明确目标指标再聊方案" },
+      { "label": "备注", "value": "适合聊埋点和效果验证" }
+    ],
+    "conversationId": "cv_012"
+  }
+]

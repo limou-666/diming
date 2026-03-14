@@ -1,0 +1,95 @@
+<script>
+export default {};
+</script>
+
+<style lang="scss">
+page,
+body,
+#app {
+  min-height: 100%;
+}
+
+page {
+  --ink: #5b3417;
+  --ink-soft: #8a6c57;
+  --cream: #f8f2e8;
+  --cream-strong: #f2e7d5;
+  --mint: #a6dec8;
+  --mint-deep: #79c5ad;
+  --sand: #f1c98f;
+  --sand-deep: #dc9356;
+  --pearl: rgba(255, 255, 255, 0.72);
+  --line: rgba(104, 67, 39, 0.08);
+  --shadow-soft: 0 18rpx 48rpx rgba(96, 68, 45, 0.12);
+  --shadow-lift: 0 28rpx 82rpx rgba(96, 68, 45, 0.16);
+  --radius-card: 34rpx;
+  --radius-pill: 999rpx;
+  --page-padding: 30rpx;
+  background:
+    radial-gradient(circle at top right, rgba(241, 201, 143, 0.28), transparent 34%),
+    radial-gradient(circle at left bottom, rgba(128, 208, 188, 0.26), transparent 28%),
+    linear-gradient(180deg, #faf5ec 0%, #f6efe5 46%, #edf7f1 100%);
+  color: var(--ink);
+  font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+view,
+text,
+button,
+input,
+textarea,
+scroll-view,
+image {
+  box-sizing: border-box;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  line-height: 1;
+}
+
+button::after {
+  border: 0;
+}
+
+.screen {
+  min-height: 100vh;
+  padding: 0 var(--page-padding) calc(36rpx + env(safe-area-inset-bottom));
+}
+
+.panel {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.76), rgba(255, 248, 241, 0.58));
+  border: 1rpx solid rgba(255, 255, 255, 0.72);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18rpx);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22rpx;
+}
+
+.section-title__main {
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.section-title__sub {
+  font-size: 22rpx;
+  color: var(--ink-soft);
+}
+
+.muted {
+  color: var(--ink-soft);
+}
+
+.hairline {
+  height: 1rpx;
+  background: var(--line);
+}
+</style>

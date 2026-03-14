@@ -1,0 +1,16 @@
+<svg width="480" height="320" viewBox="0 0 480 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="480" height="320" rx="36" fill="#101010"/>
+  <rect x="24" y="24" width="432" height="272" rx="24" fill="url(#paint0_linear)"/>
+  <circle cx="240" cy="196" r="62" fill="#F39A62"/>
+  <circle cx="240" cy="196" r="36" fill="#111111"/>
+  <circle cx="240" cy="196" r="18" fill="#6CA7FF"/>
+  <text x="56" y="92" fill="#F8EAD4" font-size="40" font-family="Georgia, serif" font-weight="700">Future</text>
+  <text x="56" y="136" fill="#F8EAD4" font-size="40" font-family="Georgia, serif" font-weight="700">Cities</text>
+  <text x="56" y="270" fill="#E3D7C2" font-size="20" font-family="Avenir Next, sans-serif">READING CARD</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="52" y1="36" x2="428" y2="296" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#171717"/>
+      <stop offset="1" stop-color="#050505"/>
+    </linearGradient>
+  </defs>
+</svg>

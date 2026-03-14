@@ -1,0 +1,47 @@
+{
+  "id": "self_001",
+  "nickname": "Mira Chen",
+  "signature": "把每一次对话都做成高质量样本。",
+  "level": "创作合伙人",
+  "job": "产品体验设计师",
+  "location": "北京",
+  "palette": ["#f2c78f", "#8bd7c1"],
+  "accent": "#5a3418",
+  "stats": [
+    { "label": "连续登录", "value": "18 天" },
+    { "label": "活跃会话", "value": "12" },
+    { "label": "收藏消息", "value": "28" }
+  ],
+  "entries": [
+    {
+      "id": "favorites",
+      "icon": "藏",
+      "label": "收藏消息",
+      "description": "快速回看常用灵感、书单和重要结论。",
+      "count": "28"
+    },
+    {
+      "id": "devices",
+      "icon": "设",
+      "label": "设备与同步",
+      "description": "查看当前登录设备与多端同步状态。",
+      "count": "3"
+    },
+    {
+      "id": "privacy",
+      "icon": "隐",
+      "label": "隐私偏好",
+      "description": "管理消息提醒、已读展示与资料开放范围。",
+      "count": ""
+    },
+    {
+      "id": "theme",
+      "icon": "景",
+      "label": "界面氛围",
+      "description": "切换暖白、浅绿与更沉稳的视觉基调。",
+      "count": "2"
+    }
+  ],
+  "quickContacts": ["ct_001", "ct_002", "ct_007"],
+  "footnote": "当前为纯前端 Mock 演示环境，所有数据均可直接替换为接口响应。"
+}

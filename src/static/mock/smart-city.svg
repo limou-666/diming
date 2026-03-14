@@ -1,0 +1,16 @@
+<svg width="480" height="320" viewBox="0 0 480 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="480" height="320" rx="36" fill="#EAF6EE"/>
+  <rect x="24" y="24" width="432" height="272" rx="28" fill="url(#paint0_linear)"/>
+  <path d="M86 234L148 176L196 204L244 140L308 184L360 122L416 174V256H86V234Z" fill="#90D4C0"/>
+  <path d="M88 252H416" stroke="#704423" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="150" cy="108" r="30" fill="#F2CB94"/>
+  <circle cx="320" cy="92" r="22" fill="#FFFFFF" fill-opacity="0.84"/>
+  <text x="64" y="88" fill="#5A3418" font-size="26" font-family="Avenir Next, sans-serif" font-weight="700">SMART CITY</text>
+  <text x="64" y="118" fill="#8A6C57" font-size="18" font-family="Avenir Next, sans-serif">LAYOUT BREAKDOWN</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="44" y1="24" x2="434" y2="302" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8F2E6"/>
+      <stop offset="1" stop-color="#DFF5EC"/>
+    </linearGradient>
+  </defs>
+</svg>
