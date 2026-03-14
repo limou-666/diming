@@ -21,8 +21,8 @@
           scroll-y
           enhanced
           show-scrollbar="false"
-          :scroll-into-view="scrollAnchor"
-          :scroll-with-animation="true"
+          :scroll-top="scrollTop"
+          :scroll-with-animation="scrollWithAnimation"
         >
           <view class="chat-banner panel">
             <text class="chat-banner__title">{{ contact.motto }}</text>
@@ -30,10 +30,17 @@
           </view>
 
           <view v-for="message in messages" :id="`msg-${message.id}`" :key="message.id" class="chat-message">
-            <ChatBubble :message="message" :contact="contact" :current-user="currentUser" />
+            <ChatBubble
+              :message="message"
+              :contact="contact"
+              :current-user="currentUser"
+              @layoutchange="handleBubbleLayoutChange"
+            />
           </view>
 
-          <view id="scroll-bottom" class="chat-bottom-anchor" />
+          <view id="scroll-bottom" class="chat-bottom-spacer">
+            <view class="chat-bottom-anchor" />
+          </view>
         </scroll-view>
 
         <view class="composer panel">
@@ -48,10 +55,11 @@
             confirm-type="send"
             placeholder="输入消息，回车或点击发送"
             placeholder-class="composer__placeholder"
+            @focus="handleComposerFocus"
             @confirm="handleSend"
           />
           <button class="composer__send" hover-class="composer__send--active" @tap="handleSend">
-            发送
+            <text class="composer__send-text">发送</text>
           </button>
         </view>
       </template>
@@ -71,7 +79,8 @@ import {
   buildOutgoingTextMessage,
   fetchConversationBundle,
   fetchProfile,
-  markConversationRead
+  markConversationRead,
+  patchMessage
 } from '@/mock';
 
 const draft = ref('');
@@ -81,7 +90,8 @@ const conversation = ref(null);
 const contact = ref(null);
 const currentUser = ref(null);
 const messages = ref([]);
-const scrollAnchor = ref('scroll-bottom');
+const scrollTop = ref(0);
+const scrollWithAnimation = ref(false);
 
 const imagePool = [
   { imageUrl: '/static/mock/book-future.svg', caption: '这张书单封面适合做图片消息演示。' },
@@ -91,6 +101,7 @@ const imagePool = [
 
 let imageIndex = 0;
 let replyTimer = null;
+let scrollTimers = [];
 
 async function loadPage(id) {
   loading.value = true;
@@ -110,33 +121,64 @@ async function loadPage(id) {
   messages.value = bundle.messages;
   markConversationRead(id);
   loading.value = false;
-  await nextTick();
-  scrollToBottom(false);
+  await scrollToBottom(false);
 }
 
 function clearFreshState(message) {
   setTimeout(() => {
-    message.isFresh = false;
-    if (message.status === 'sending') {
-      message.status = 'sent';
+    const target = messages.value.find((item) => item.id === message.id);
+    if (target) {
+      target.isFresh = false;
+      if (target.status === 'sending') {
+        target.status = 'sent';
+      }
     }
+    patchMessage(conversationId.value, message.id, {
+      isFresh: false,
+      status: 'sent'
+    });
   }, 320);
 }
 
 async function pushMessage(message, seedText = '') {
   messages.value = messages.value.concat(message);
   appendMessage(conversationId.value, message, { incrementUnread: false });
-  await nextTick();
-  scrollToBottom(true);
+  await scrollToBottom(false);
   clearFreshState(message);
   if (seedText) {
     scheduleReply(seedText);
   }
 }
 
-function scrollToBottom(animated = true) {
-  const lastMessage = messages.value[messages.value.length - 1];
-  scrollAnchor.value = animated && lastMessage ? `msg-${lastMessage.id}` : 'scroll-bottom';
+function clearScrollTimers() {
+  scrollTimers.forEach((timer) => clearTimeout(timer));
+  scrollTimers = [];
+}
+
+function scheduleBottomSync(animated = true, delays = [80]) {
+  clearScrollTimers();
+  scrollTimers = delays.map((delay) =>
+    setTimeout(async () => {
+      scrollWithAnimation.value = animated;
+      await nextTick();
+      scrollTop.value += 1000000;
+    }, delay)
+  );
+}
+
+async function scrollToBottom(animated = true) {
+  scrollWithAnimation.value = animated;
+  await nextTick();
+  scrollTop.value += 1000000;
+  scheduleBottomSync(animated, [80, 220, 420]);
+}
+
+function handleComposerFocus() {
+  scheduleBottomSync(false, [120, 260, 420]);
+}
+
+function handleBubbleLayoutChange() {
+  scheduleBottomSync(false, [40, 160, 320]);
 }
 
 function handleSend() {
@@ -168,8 +210,7 @@ function scheduleReply(seedText) {
     const reply = buildMockReply(contact.value.id, seedText);
     messages.value = messages.value.concat(reply);
     appendMessage(conversationId.value, reply, { incrementUnread: false });
-    await nextTick();
-    scrollToBottom(true);
+    await scrollToBottom(false);
     clearFreshState(reply);
   }, 960);
 }
@@ -192,23 +233,27 @@ onUnload(() => {
   if (replyTimer) {
     clearTimeout(replyTimer);
   }
+  clearScrollTimers();
 });
 </script>
 
 <style scoped lang="scss">
 .chat-page {
-  min-height: 100vh;
-  padding: 0 30rpx 24rpx;
+  height: 100vh;
+  overflow: hidden;
+  padding: 0 30rpx;
   background:
     radial-gradient(circle at top, rgba(166, 222, 200, 0.28), transparent 34%),
     linear-gradient(180deg, #faf5ec 0%, #f5efe5 50%, #eef7f1 100%);
 }
 
 .chat-page__inner {
-  min-height: 100vh;
+  position: relative;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  overflow: hidden;
 }
 
 .chat-loading {
@@ -234,7 +279,7 @@ onUnload(() => {
 .chat-scroll {
   flex: 1;
   height: 0;
-  padding-bottom: 12rpx;
+  min-height: 0;
 }
 
 .chat-banner {
@@ -262,38 +307,57 @@ onUnload(() => {
   margin-bottom: 6rpx;
 }
 
+.chat-bottom-spacer {
+  height: calc(224rpx + env(safe-area-inset-bottom));
+}
+
 .chat-bottom-anchor {
-  height: 2rpx;
+  height: 1rpx;
 }
 
 .composer {
   display: flex;
   align-items: center;
   gap: 16rpx;
-  margin-top: 18rpx;
+  margin-top: 0;
   padding: 18rpx;
+  position: fixed;
+  left: 30rpx;
+  right: 30rpx;
+  bottom: calc(24rpx + env(safe-area-inset-bottom));
+  z-index: 20;
 }
 
 .composer__tool,
 .composer__send {
-  width: 88rpx;
   height: 88rpx;
   border-radius: 28rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26rpx;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .composer__tool {
+  width: 88rpx;
   background: rgba(255, 255, 255, 0.68);
+  font-size: 26rpx;
   color: var(--ink);
 }
 
 .composer__send {
+  min-width: 108rpx;
+  padding: 0 22rpx;
   background: linear-gradient(135deg, #efbb72, #de8a58);
   color: #fff;
+}
+
+.composer__send-text {
+  display: block;
+  white-space: nowrap;
+  font-size: 24rpx;
+  line-height: 1.2;
 }
 
 .composer__tool--active,

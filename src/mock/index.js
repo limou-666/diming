@@ -151,6 +151,15 @@ export function appendMessage(conversationId, message, options = {}) {
   }
 }
 
+export function patchMessage(conversationId, messageId, patch = {}) {
+  const bucket = messageState[conversationId] || [];
+  const target = bucket.find((item) => item.id === messageId);
+  if (!target) {
+    return;
+  }
+  Object.assign(target, clone(patch));
+}
+
 export function buildOutgoingTextMessage(content, senderId = profileState.id) {
   return {
     id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,

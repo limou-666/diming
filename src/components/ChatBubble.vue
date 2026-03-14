@@ -13,7 +13,7 @@
       <view class="bubble-wrap" :class="wrapClass">
         <text v-if="message.type === 'text'" class="bubble-text">{{ message.content }}</text>
         <view v-else class="bubble-image-card" @tap="previewImage">
-          <image class="bubble-image" :src="message.imageUrl" mode="aspectFill" lazy-load />
+          <image class="bubble-image" :src="message.imageUrl" mode="aspectFill" lazy-load @load="notifyLayoutChange" @error="notifyLayoutChange" />
           <text class="bubble-caption">{{ message.caption }}</text>
         </view>
       </view>
@@ -65,6 +65,7 @@ const props = defineProps({
     required: true
   }
 });
+const emit = defineEmits(['layoutchange']);
 
 const feedbackActions = ['喜欢', '再来一条'];
 const isSelf = computed(() => props.message.senderId === props.currentUser.id);
@@ -89,6 +90,10 @@ function handleFeedback(label) {
     title: `已${label}`,
     icon: 'none'
   });
+}
+
+function notifyLayoutChange() {
+  emit('layoutchange');
 }
 </script>
 

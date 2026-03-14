@@ -17,7 +17,7 @@
         hover-class="header__action--active"
         @tap="$emit('action')"
       >
-        {{ rightLabel }}
+        <text class="header__action-text">{{ rightLabel }}</text>
       </button>
       <view v-else class="header__spacer" />
     </view>
@@ -52,8 +52,22 @@ const emit = defineEmits(['back', 'action', 'titleclick']);
 
 function handleBack() {
   emit('back');
-  if (getCurrentPages().length > 1) {
-    uni.navigateBack();
+  const pages = getCurrentPages();
+  if (pages.length > 1) {
+    uni.navigateBack({
+      fail: () => {
+        uni.reLaunch({
+          url: '/pages/sessions/index'
+        });
+      }
+    });
+    return;
+  }
+
+  if (pages[0]?.route !== 'pages/sessions/index') {
+    uni.reLaunch({
+      url: '/pages/sessions/index'
+    });
   }
 }
 
@@ -80,9 +94,13 @@ function handleTitleClick() {
 .header__icon,
 .header__action,
 .header__spacer {
-  width: 84rpx;
   height: 84rpx;
   flex-shrink: 0;
+}
+
+.header__icon,
+.header__spacer {
+  width: 96rpx;
 }
 
 .header__icon,
@@ -95,7 +113,22 @@ function handleTitleClick() {
   border: 1rpx solid rgba(255, 255, 255, 0.76);
   color: var(--ink);
   box-shadow: var(--shadow-soft);
+}
+
+.header__icon {
   font-size: 34rpx;
+}
+
+.header__action {
+  min-width: 96rpx;
+  padding: 0 20rpx;
+}
+
+.header__action-text {
+  display: block;
+  white-space: nowrap;
+  font-size: 26rpx;
+  line-height: 1.2;
 }
 
 .header__icon--active,
