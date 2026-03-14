@@ -49,8 +49,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { onPullDownRefresh, onReachBottom, onShow } from '@dcloudio/uni-app';
+import { nextTick, ref } from 'vue';
+import { onPageScroll, onPullDownRefresh, onReachBottom, onShow, onUnload } from '@dcloudio/uni-app';
 import AppHeader from '@/components/AppHeader.vue';
 import BottomDock from '@/components/BottomDock.vue';
 import SessionCard from '@/components/SessionCard.vue';
@@ -59,8 +59,21 @@ import { fetchProfile } from '@/mock';
 
 const profile = ref(null);
 const initialized = ref(false);
-const { sessions, total, unreadTotal, activeCount, loading, hasMore, loadInitial, refresh, loadMore } =
-  usePagedSessions(6);
+const {
+  sessions,
+  total,
+  unreadTotal,
+  activeCount,
+  loading,
+  refreshing,
+  hasMore,
+  loadInitial,
+  refresh,
+  loadMore
+} = usePagedSessions(6);
+const windowHeight = uni.getSystemInfoSync().windowHeight || 0;
+
+let loadMoreTimer = null;
 
 async function loadProfile() {
   profile.value = await fetchProfile();
@@ -68,7 +81,38 @@ async function loadProfile() {
 
 async function bootstrap() {
   await Promise.all([loadInitial(), loadProfile()]);
+  await nextTick();
+  scheduleLoadMoreCheck(80);
   initialized.value = true;
+}
+
+function clearLoadMoreTimer() {
+  if (loadMoreTimer) {
+    clearTimeout(loadMoreTimer);
+    loadMoreTimer = null;
+  }
+}
+
+function scheduleLoadMoreCheck(delay = 0) {
+  clearLoadMoreTimer();
+  loadMoreTimer = setTimeout(() => {
+    if (loading.value || refreshing.value || !hasMore.value) {
+      return;
+    }
+    const query = uni.createSelectorQuery();
+    query.select('.load-state').boundingClientRect();
+    query.exec((result) => {
+      const rect = result?.[0];
+      if (!rect || loading.value || refreshing.value || !hasMore.value) {
+        return;
+      }
+      if (rect.top <= windowHeight + 220) {
+        loadMore().then(() => {
+          scheduleLoadMoreCheck(80);
+        });
+      }
+    });
+  }, delay);
 }
 
 function openSession(session) {
@@ -83,10 +127,14 @@ onShow(async () => {
     return;
   }
   await Promise.all([refresh(), loadProfile()]);
+  await nextTick();
+  scheduleLoadMoreCheck(80);
 });
 
 onPullDownRefresh(async () => {
   await Promise.all([refresh(), loadProfile()]);
+  await nextTick();
+  scheduleLoadMoreCheck(80);
   uni.stopPullDownRefresh();
   uni.showToast({
     title: '会话已刷新',
@@ -95,7 +143,17 @@ onPullDownRefresh(async () => {
 });
 
 onReachBottom(() => {
-  loadMore();
+  loadMore().then(() => {
+    scheduleLoadMoreCheck(80);
+  });
+});
+
+onPageScroll(() => {
+  scheduleLoadMoreCheck(60);
+});
+
+onUnload(() => {
+  clearLoadMoreTimer();
 });
 </script>
 

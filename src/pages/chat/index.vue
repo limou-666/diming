@@ -16,51 +16,53 @@
       </view>
 
       <template v-else>
-        <scroll-view
-          class="chat-scroll"
-          scroll-y
-          enhanced
-          show-scrollbar="false"
-          :scroll-top="scrollTop"
-          :scroll-with-animation="scrollWithAnimation"
-        >
-          <view class="chat-banner panel">
-            <text class="chat-banner__title">{{ contact.motto }}</text>
-            <text class="chat-banner__text">支持文本与图片消息，发送后自动滚动，并保留轻量动画反馈。</text>
-          </view>
+        <view class="chat-body">
+          <scroll-view
+            class="chat-scroll"
+            scroll-y
+            enhanced
+            show-scrollbar="false"
+            :scroll-top="scrollTop"
+            :scroll-with-animation="scrollWithAnimation"
+          >
+            <view class="chat-banner panel">
+              <text class="chat-banner__title">{{ contact.motto }}</text>
+              <text class="chat-banner__text">支持文本与图片消息，发送后自动滚动，并保留轻量动画反馈。</text>
+            </view>
 
-          <view v-for="message in messages" :id="`msg-${message.id}`" :key="message.id" class="chat-message">
-            <ChatBubble
-              :message="message"
-              :contact="contact"
-              :current-user="currentUser"
-              @layoutchange="handleBubbleLayoutChange"
+            <view v-for="message in messages" :id="`msg-${message.id}`" :key="message.id" class="chat-message">
+              <ChatBubble
+                :message="message"
+                :contact="contact"
+                :current-user="currentUser"
+                @layoutchange="handleBubbleLayoutChange"
+              />
+            </view>
+
+            <view id="scroll-bottom" class="chat-bottom-spacer">
+              <view class="chat-bottom-anchor" />
+            </view>
+          </scroll-view>
+
+          <view class="composer panel">
+            <button class="composer__tool" hover-class="composer__tool--active" @tap="sendImage">
+              图
+            </button>
+            <input
+              v-model="draft"
+              class="composer__input"
+              type="text"
+              maxlength="200"
+              confirm-type="send"
+              placeholder="输入消息，回车或点击发送"
+              placeholder-class="composer__placeholder"
+              @focus="handleComposerFocus"
+              @confirm="handleSend"
             />
+            <button class="composer__send" hover-class="composer__send--active" @tap="handleSend">
+              <text class="composer__send-text">发送</text>
+            </button>
           </view>
-
-          <view id="scroll-bottom" class="chat-bottom-spacer">
-            <view class="chat-bottom-anchor" />
-          </view>
-        </scroll-view>
-
-        <view class="composer panel">
-          <button class="composer__tool" hover-class="composer__tool--active" @tap="sendImage">
-            图
-          </button>
-          <input
-            v-model="draft"
-            class="composer__input"
-            type="text"
-            maxlength="200"
-            confirm-type="send"
-            placeholder="输入消息，回车或点击发送"
-            placeholder-class="composer__placeholder"
-            @focus="handleComposerFocus"
-            @confirm="handleSend"
-          />
-          <button class="composer__send" hover-class="composer__send--active" @tap="handleSend">
-            <text class="composer__send-text">发送</text>
-          </button>
         </view>
       </template>
     </view>
@@ -239,6 +241,7 @@ onUnload(() => {
 
 <style scoped lang="scss">
 .chat-page {
+  min-height: 100vh;
   height: 100vh;
   overflow: hidden;
   padding: 0 30rpx;
@@ -248,12 +251,19 @@ onUnload(() => {
 }
 
 .chat-page__inner {
-  position: relative;
   height: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.chat-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
 }
 
 .chat-loading {
@@ -308,7 +318,7 @@ onUnload(() => {
 }
 
 .chat-bottom-spacer {
-  height: calc(224rpx + env(safe-area-inset-bottom));
+  height: 24rpx;
 }
 
 .chat-bottom-anchor {
@@ -319,13 +329,9 @@ onUnload(() => {
   display: flex;
   align-items: center;
   gap: 16rpx;
-  margin-top: 0;
+  flex-shrink: 0;
+  margin-top: 12rpx;
   padding: 18rpx;
-  position: fixed;
-  left: 30rpx;
-  right: 30rpx;
-  bottom: calc(24rpx + env(safe-area-inset-bottom));
-  z-index: 20;
 }
 
 .composer__tool,
@@ -377,5 +383,11 @@ onUnload(() => {
 
 .composer__placeholder {
   color: #ae9a89;
+}
+
+@supports (height: 100dvh) {
+  .chat-page {
+    height: 100dvh;
+  }
 }
 </style>
