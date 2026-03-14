@@ -1,12 +1,55 @@
-<script>
-export default {};
+<script setup>
+import { onBeforeUnmount, onMounted } from 'vue';
+
+let cleanupViewportHeightSync = null;
+
+function syncViewportHeight() {
+  // #ifdef H5
+  const viewportHeight = window.visualViewport?.height || window.innerHeight;
+  document.documentElement?.style.setProperty('--app-height', `${viewportHeight}px`);
+  // #endif
+}
+
+onMounted(() => {
+  // #ifdef H5
+  const handleResize = () => {
+    syncViewportHeight();
+  };
+
+  syncViewportHeight();
+  window.addEventListener('resize', handleResize, { passive: true });
+  window.addEventListener('orientationchange', handleResize, { passive: true });
+  window.visualViewport?.addEventListener('resize', handleResize, { passive: true });
+
+  cleanupViewportHeightSync = () => {
+    window.removeEventListener('resize', handleResize);
+    window.removeEventListener('orientationchange', handleResize);
+    window.visualViewport?.removeEventListener('resize', handleResize);
+  };
+  // #endif
+});
+
+onBeforeUnmount(() => {
+  cleanupViewportHeightSync?.();
+});
 </script>
 
 <style lang="scss">
+html,
 page,
 body,
 #app {
   min-height: 100%;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+html {
+  --app-height: 100vh;
 }
 
 page {
@@ -55,7 +98,7 @@ button::after {
 }
 
 .screen {
-  min-height: 100vh;
+  min-height: var(--app-height, 100vh);
   padding: 0 var(--page-padding) calc(36rpx + env(safe-area-inset-bottom));
 }
 
@@ -91,5 +134,11 @@ button::after {
 .hairline {
   height: 1rpx;
   background: var(--line);
+}
+
+@supports (height: 100dvh) {
+  html {
+    --app-height: 100dvh;
+  }
 }
 </style>

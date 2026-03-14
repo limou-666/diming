@@ -54,6 +54,7 @@
               type="text"
               maxlength="200"
               confirm-type="send"
+              :cursor-spacing="20"
               placeholder="输入消息，回车或点击发送"
               placeholder-class="composer__placeholder"
               @focus="handleComposerFocus"
@@ -241,8 +242,8 @@ onUnload(() => {
 
 <style scoped lang="scss">
 .chat-page {
-  min-height: 100vh;
-  height: 100vh;
+  min-height: var(--app-height, 100vh);
+  height: var(--app-height, 100vh);
   overflow: hidden;
   padding: 0 30rpx;
   background:
@@ -263,6 +264,7 @@ onUnload(() => {
   min-height: 0;
   display: flex;
   flex-direction: column;
+  gap: 12rpx;
   padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
 }
 
@@ -330,7 +332,6 @@ onUnload(() => {
   align-items: center;
   gap: 16rpx;
   flex-shrink: 0;
-  margin-top: 12rpx;
   padding: 18rpx;
 }
 
@@ -388,6 +389,43 @@ onUnload(() => {
 @supports (height: 100dvh) {
   .chat-page {
     height: 100dvh;
+    min-height: 100dvh;
+  }
+}
+
+@media screen and (max-width: 420px) {
+  .chat-page {
+    padding: 0 20rpx;
+  }
+
+  .chat-banner {
+    margin-bottom: 20rpx;
+    padding: 22rpx;
+  }
+
+  .composer {
+    gap: 12rpx;
+    padding: 14rpx;
+    border-radius: 28rpx;
+  }
+
+  .composer__tool,
+  .composer__send,
+  .composer__input {
+    height: 82rpx;
+  }
+
+  .composer__tool {
+    width: 82rpx;
+  }
+
+  .composer__send {
+    min-width: 96rpx;
+    padding: 0 18rpx;
+  }
+
+  .composer__input {
+    padding: 0 20rpx;
   }
 }
 </style>
