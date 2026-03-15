@@ -50,6 +50,7 @@ body,
 
 html {
   --app-height: 100vh;
+  --screen-max-width: 860px;
 }
 
 page {
@@ -99,6 +100,9 @@ button::after {
 
 .screen {
   min-height: var(--app-height, 100vh);
+  width: 100%;
+  max-width: var(--screen-max-width);
+  margin: 0 auto;
   padding: 0 var(--page-padding) calc(36rpx + env(safe-area-inset-bottom));
 }
 
@@ -108,6 +112,20 @@ button::after {
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(18rpx);
+}
+
+.page-reveal {
+  opacity: 0;
+  transform: translate3d(0, 20rpx, 0);
+  transition:
+    opacity 220ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.page-reveal--entered {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
 }
 
 .section-title {
@@ -139,6 +157,15 @@ button::after {
 @supports (height: 100dvh) {
   html {
     --app-height: 100dvh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    will-change: auto;
   }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <view class="dock-wrap">
+  <view class="dock-wrap" :class="{ 'dock-wrap--inline': props.inline }">
     <view class="dock panel">
       <button
         v-for="item in items"
@@ -17,10 +17,16 @@
 </template>
 
 <script setup>
+import { reLaunchPage } from '@/utils/navigation';
+
 const props = defineProps({
   current: {
     type: String,
     default: 'sessions'
+  },
+  inline: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -33,25 +39,36 @@ function navigate(item) {
   if (props.current === item.key) {
     return;
   }
-  uni.reLaunch({
-    url: item.url
-  });
+  reLaunchPage(item.url);
 }
 </script>
 
 <style scoped lang="scss">
 .dock-wrap {
   position: fixed;
-  left: 30rpx;
-  right: 30rpx;
+  left: 50%;
   bottom: calc(24rpx + env(safe-area-inset-bottom));
+  width: calc(100% - 60rpx);
+  max-width: calc(var(--screen-max-width, 860px) - 60rpx);
+  transform: translateX(-50%);
   z-index: 20;
+}
+
+.dock-wrap--inline {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  width: 100%;
+  max-width: none;
+  margin: 0 0 28rpx;
+  transform: none;
 }
 
 .dock {
   display: flex;
   gap: 16rpx;
   padding: 16rpx;
+  transition: transform 220ms ease, box-shadow 220ms ease;
 }
 
 .dock__item {
@@ -63,6 +80,7 @@ function navigate(item) {
   justify-content: center;
   gap: 12rpx;
   color: var(--ink-soft);
+  transition: transform 180ms ease, color 220ms ease, background 220ms ease, box-shadow 220ms ease;
 }
 
 .dock__item--hover {
@@ -85,10 +103,22 @@ function navigate(item) {
   background: rgba(255, 255, 255, 0.56);
   font-size: 24rpx;
   font-weight: 700;
+  transition: transform 220ms ease, background 220ms ease;
 }
 
 .dock__label {
   font-size: 26rpx;
   font-weight: 600;
+  transition: transform 220ms ease, letter-spacing 220ms ease;
+}
+
+.dock__item--active .dock__icon {
+  transform: translate3d(0, -2rpx, 0) scale(1.04);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.dock__item--active .dock__label {
+  transform: translate3d(0, -1rpx, 0);
+  letter-spacing: 1rpx;
 }
 </style>

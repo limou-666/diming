@@ -25,6 +25,8 @@
 </template>
 
 <script setup>
+import { navigateBackPage, reLaunchPage } from '@/utils/navigation';
+
 const props = defineProps({
   title: {
     type: String,
@@ -54,20 +56,16 @@ function handleBack() {
   emit('back');
   const pages = getCurrentPages();
   if (pages.length > 1) {
-    uni.navigateBack({
+    navigateBackPage({
       fail: () => {
-        uni.reLaunch({
-          url: '/pages/sessions/index'
-        });
+        reLaunchPage('/pages/sessions/index');
       }
     });
     return;
   }
 
   if (pages[0]?.route !== 'pages/sessions/index') {
-    uni.reLaunch({
-      url: '/pages/sessions/index'
-    });
+    reLaunchPage('/pages/sessions/index');
   }
 }
 
@@ -113,6 +111,7 @@ function handleTitleClick() {
   border: 1rpx solid rgba(255, 255, 255, 0.76);
   color: var(--ink);
   box-shadow: var(--shadow-soft);
+  transition: transform 180ms ease, background 220ms ease, box-shadow 220ms ease;
 }
 
 .header__icon {
@@ -143,10 +142,15 @@ function handleTitleClick() {
   align-items: center;
   justify-content: center;
   min-width: 0;
+  transition: transform 220ms ease, opacity 180ms ease;
 }
 
 .header__title--clickable {
   cursor: pointer;
+}
+
+.header__title--clickable:active {
+  transform: translate3d(0, 2rpx, 0);
 }
 
 .header__main {

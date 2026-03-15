@@ -1,6 +1,6 @@
 <template>
   <view class="chat-page">
-    <view class="chat-page__inner">
+    <view class="chat-page__inner page-reveal" :class="{ 'page-reveal--entered': pageRevealed }">
       <AppHeader
         :title="contact?.nickname || '聊天详情'"
         :subtitle="contact ? `${contact.role} · 点击标题查看资料` : '正在加载会话'"
@@ -76,6 +76,7 @@ import { computed, nextTick, ref } from 'vue';
 import { onLoad, onUnload } from '@dcloudio/uni-app';
 import AppHeader from '@/components/AppHeader.vue';
 import ChatBubble from '@/components/ChatBubble.vue';
+import { usePageReveal } from '@/composables/usePageReveal';
 import {
   appendMessage,
   buildMockReply,
@@ -84,8 +85,11 @@ import {
   fetchConversationBundle,
   fetchProfile,
   markConversationRead,
-  patchMessage
+  patchMessage,
+  primeContact,
+  primeProfile
 } from '@/mock';
+import { navigateToPage } from '@/utils/navigation';
 
 const draft = ref('');
 const loading = ref(true);
@@ -95,6 +99,8 @@ const currentUser = ref(null);
 const messages = ref([]);
 const scrollTop = ref(0);
 const scrollWithAnimation = ref(false);
+const { pageRevealed } = usePageReveal();
+// 反馈操作只挂在最新一条来自对方的文本消息上。
 const latestFeedbackMessageId = computed(() => {
   const currentUserId = currentUser.value?.id;
   if (!currentUserId) {
@@ -122,6 +128,12 @@ let replyTimer = null;
 let scrollTimers = [];
 let feedbackTimers = [];
 
+/**
+ * 首次进入聊天页时并行加载会话数据和当前用户资料。
+ *
+ * @param {string} id 会话 ID。
+ * @returns {Promise<void>}
+ */
 async function loadPage(id) {
   loading.value = true;
   const [bundle, profile] = await Promise.all([fetchConversationBundle(id), fetchProfile()]);
@@ -142,6 +154,11 @@ async function loadPage(id) {
   await scrollToBottom(false);
 }
 
+/**
+ * 新消息的入场动画结束后，把临时状态回写成稳定状态。
+ *
+ * @param {Object} message 需要清理临时状态的消息对象。
+ */
 function clearFreshState(message) {
   setTimeout(() => {
     const target = messages.value.find((item) => item.id === message.id);
@@ -158,6 +175,12 @@ function clearFreshState(message) {
   }, 320);
 }
 
+/**
+ * 同时更新当前页面里的消息对象和 mock 存储中的消息对象。
+ *
+ * @param {string} messageId 消息 ID。
+ * @param {Object} [patch={}] 需要合并到消息上的字段。
+ */
 function patchLocalMessage(messageId, patch = {}) {
   const target = messages.value.find((item) => item.id === messageId);
   if (target) {
@@ -166,6 +189,12 @@ function patchLocalMessage(messageId, patch = {}) {
   patchMessage(conversationId.value, messageId, patch);
 }
 
+/**
+ * 统一处理来自对方的新消息追加，自动滚到底并清理 fresh 状态。
+ *
+ * @param {Object} message 需要插入列表的消息对象。
+ * @returns {Promise<void>}
+ */
 async function appendIncomingMessage(message) {
   messages.value = messages.value.concat(message);
   appendMessage(conversationId.value, message, { incrementUnread: false });
@@ -183,11 +212,20 @@ async function pushMessage(message, seedText = '') {
   }
 }
 
+/**
+ * 清理所有尚未执行的滚动同步定时器，避免重复触发滚动。
+ */
 function clearScrollTimers() {
   scrollTimers.forEach((timer) => clearTimeout(timer));
   scrollTimers = [];
 }
 
+/**
+ * 在多个时间点重复同步到底部，兼容图片加载和键盘弹起造成的高度变化。
+ *
+ * @param {boolean} [animated=true] 是否启用滚动动画。
+ * @param {number[]} [delays=[80]] 每次同步的延迟时间。
+ */
 function scheduleBottomSync(animated = true, delays = [80]) {
   clearScrollTimers();
   scrollTimers = delays.map((delay) =>
@@ -199,6 +237,12 @@ function scheduleBottomSync(animated = true, delays = [80]) {
   );
 }
 
+/**
+ * 立即请求滚动到底部，并追加几次兜底同步。
+ *
+ * @param {boolean} [animated=true] 是否启用滚动动画。
+ * @returns {Promise<void>}
+ */
 async function scrollToBottom(animated = true) {
   scrollWithAnimation.value = animated;
   await nextTick();
@@ -216,15 +260,19 @@ function handleBubbleLayoutChange() {
 
 function handleAvatarClick(payload) {
   if (payload?.isSelf) {
-    uni.navigateTo({
-      url: '/pages/profile/index'
-    });
+    primeProfile();
+    navigateToPage('/pages/profile/index');
     return;
   }
 
   openContact();
 }
 
+/**
+ * 处理单条消息下方的反馈动作，包括点赞和“再来一条”。
+ *
+ * @param {{ action: string, messageId: string }} payload 由消息气泡抛出的反馈动作。
+ */
 function handleMessageFeedback(payload) {
   const target = messages.value.find((item) => item.id === payload?.messageId);
   if (!target || !contact.value) {
@@ -280,6 +328,11 @@ function sendImage() {
   pushMessage(message, asset.caption);
 }
 
+/**
+ * 模拟联系人稍后回复的节奏，并复用统一的追加逻辑。
+ *
+ * @param {string} seedText 用于生成回复上下文的种子文本。
+ */
 function scheduleReply(seedText) {
   if (replyTimer) {
     clearTimeout(replyTimer);
@@ -294,9 +347,8 @@ function openContact() {
   if (!contact.value) {
     return;
   }
-  uni.navigateTo({
-    url: `/pages/contact/index?contactId=${contact.value.id}`
-  });
+  primeContact(contact.value.id);
+  navigateToPage(`/pages/contact/index?contactId=${contact.value.id}`);
 }
 
 onLoad(async (options) => {

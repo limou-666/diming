@@ -1,8 +1,8 @@
 <template>
-  <view class="screen profile-page">
-    <AppHeader title="个人中心" subtitle="当前用户信息与功能入口" :showBack="false" />
+  <view class="screen profile-page page-reveal" :class="{ 'page-reveal--entered': pageRevealed }">
+    <AppHeader title="个人中心" subtitle="当前用户信息与功能入口" />
 
-    <view v-if="profile" class="profile-hero panel">
+    <view v-if="profile" class="profile-hero panel profile-animate profile-animate--1">
       <AvatarBadge
         :name="profile.nickname"
         :palette="profile.palette"
@@ -17,7 +17,7 @@
       </view>
     </view>
 
-    <view v-if="profile" class="profile-stats">
+    <view v-if="profile" class="profile-stats profile-animate profile-animate--2">
       <view v-for="item in profile.stats" :key="item.label" class="profile-stats__item panel">
         <text class="profile-stats__value">{{ item.value }}</text>
         <text class="profile-stats__label">{{ item.label }}</text>
@@ -31,9 +31,10 @@
 
     <view class="quick-contacts">
       <view
-        v-for="contact in quickContacts"
+        v-for="(contact, index) in quickContacts"
         :key="contact.id"
-        class="quick-contacts__item panel"
+        class="quick-contacts__item panel profile-list__item"
+        :style="{ animationDelay: `${120 + index * 50}ms` }"
         hover-class="quick-contacts__item--active"
         @tap="openContact(contact)"
       >
@@ -54,14 +55,19 @@
     </view>
 
     <view class="profile-entries">
-      <FeatureEntry v-for="entry in profile?.entries || []" :key="entry.id" :entry="entry" @select="handleEntryClick" />
+      <FeatureEntry
+        v-for="(entry, index) in profile?.entries || []"
+        :key="entry.id"
+        class="profile-entry"
+        :style="{ animationDelay: `${180 + index * 50}ms` }"
+        :entry="entry"
+        @select="handleEntryClick"
+      />
     </view>
 
-    <view v-if="profile" class="profile-footnote panel">
+    <view v-if="profile" class="profile-footnote panel profile-animate profile-animate--4">
       <text>{{ profile.footnote }}</text>
     </view>
-
-    <BottomDock current="profile" />
   </view>
 </template>
 
@@ -70,12 +76,14 @@ import { ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import AppHeader from '@/components/AppHeader.vue';
 import AvatarBadge from '@/components/AvatarBadge.vue';
-import BottomDock from '@/components/BottomDock.vue';
 import FeatureEntry from '@/components/FeatureEntry.vue';
-import { fetchContactsByIds, fetchProfile, getConversationIdByContact } from '@/mock';
+import { usePageReveal } from '@/composables/usePageReveal';
+import { fetchContactsByIds, fetchProfile, getConversationIdByContact, primeContact, primeConversationBundle } from '@/mock';
+import { navigateToPage } from '@/utils/navigation';
 
 const profile = ref(null);
 const quickContacts = ref([]);
+const { pageRevealed } = usePageReveal();
 
 async function loadPage() {
   const profileData = await fetchProfile();
@@ -84,16 +92,14 @@ async function loadPage() {
 }
 
 function openContact(contact) {
-  uni.navigateTo({
-    url: `/pages/contact/index?contactId=${contact.id}`
-  });
+  primeContact(contact.id);
+  navigateToPage(`/pages/contact/index?contactId=${contact.id}`);
 }
 
 function openChat(contact) {
   const conversationId = getConversationIdByContact(contact.id);
-  uni.navigateTo({
-    url: `/pages/chat/index?conversationId=${conversationId}`
-  });
+  primeConversationBundle(conversationId);
+  navigateToPage(`/pages/chat/index?conversationId=${conversationId}`);
 }
 
 function handleEntryClick(entry) {
@@ -110,7 +116,28 @@ onShow(() => {
 
 <style scoped lang="scss">
 .profile-page {
-  padding-bottom: 180rpx;
+  padding-bottom: 56rpx;
+}
+
+.profile-animate,
+.profile-list__item,
+.profile-entry {
+  opacity: 0;
+  transform: translate3d(0, 22rpx, 0);
+  animation: profile-rise-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+.profile-animate--1 {
+  animation-delay: 40ms;
+}
+
+.profile-animate--2 {
+  animation-delay: 90ms;
+}
+
+.profile-animate--4 {
+  animation-delay: 320ms;
 }
 
 .profile-hero {
@@ -165,6 +192,19 @@ onShow(() => {
 .profile-stats__item {
   padding: 24rpx 18rpx;
   text-align: center;
+  animation: tile-rise-in 0.38s ease both;
+}
+
+.profile-stats__item:nth-child(1) {
+  animation-delay: 130ms;
+}
+
+.profile-stats__item:nth-child(2) {
+  animation-delay: 190ms;
+}
+
+.profile-stats__item:nth-child(3) {
+  animation-delay: 250ms;
 }
 
 .profile-stats__value {
@@ -193,6 +233,7 @@ onShow(() => {
   align-items: center;
   gap: 18rpx;
   padding: 22rpx;
+  transition: transform 220ms ease, box-shadow 220ms ease, background 220ms ease;
 }
 
 .quick-contacts__item--active {
@@ -225,6 +266,7 @@ onShow(() => {
   background: rgba(255, 255, 255, 0.72);
   color: var(--ink);
   font-size: 24rpx;
+  transition: transform 180ms ease, background 220ms ease;
 }
 
 .quick-contacts__button--active {
@@ -237,5 +279,29 @@ onShow(() => {
   font-size: 22rpx;
   line-height: 1.7;
   color: var(--ink-soft);
+}
+
+@keyframes profile-rise-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 22rpx, 0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes tile-rise-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 16rpx, 0) scale(0.97);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
 }
 </style>

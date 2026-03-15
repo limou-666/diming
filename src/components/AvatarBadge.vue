@@ -6,7 +6,8 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed } from 'vue';
+import { useViewportWidth } from '@/composables/useViewportWidth';
 
 const props = defineProps({
   name: {
@@ -64,19 +65,7 @@ function parseSize(value) {
   return matched ? Number(matched[1]) : 84;
 }
 
-function getViewportWidth() {
-  try {
-    return uni.getSystemInfoSync().windowWidth || 375;
-  } catch (error) {
-    return 375;
-  }
-}
-
-const viewportWidth = ref(getViewportWidth());
-
-function syncViewportWidth() {
-  viewportWidth.value = getViewportWidth();
-}
+const viewportWidth = useViewportWidth();
 
 function rpxToPx(value) {
   return (Number(value) * viewportWidth.value) / 750;
@@ -127,18 +116,6 @@ const avatarStyle = computed(() => ({
   height: sizeValue.value,
   background: `linear-gradient(135deg, ${props.palette[0] || '#a6dec8'} 0%, ${props.palette[1] || '#f1c98f'} 100%)`
 }));
-
-onMounted(() => {
-  if (typeof window !== 'undefined') {
-    window.addEventListener('resize', syncViewportWidth);
-  }
-});
-
-onUnmounted(() => {
-  if (typeof window !== 'undefined') {
-    window.removeEventListener('resize', syncViewportWidth);
-  }
-});
 </script>
 
 <style scoped lang="scss">

@@ -1,5 +1,5 @@
 <template>
-  <view class="screen sessions-page">
+  <view class="screen sessions-page page-reveal" :class="{ 'page-reveal--entered': pageRevealed }">
     <AppHeader title="对话仓库" subtitle="把灵感聊清楚，也把细节做顺滑" :showBack="false" />
 
     <view class="hero panel">
@@ -12,6 +12,7 @@
         <view class="hero__stat">
           <text class="hero__stat-value">{{ unreadTotal }}</text>
           <text class="hero__stat-label">未读消息</text>
+          <text class="hero__stat-tip">最近未读会在下方工具条里展开</text>
         </view>
         <view class="hero__stat">
           <text class="hero__stat-value">{{ activeCount }}</text>
@@ -20,6 +21,59 @@
       </view>
     </view>
 
+    <view class="workspace-bar panel">
+      <view class="workspace-bar__head">
+        <view class="workspace-bar__copy">
+          <text class="workspace-bar__eyebrow">页面切换</text>
+        </view>
+      </view>
+
+      <view class="workspace-bar__body">
+        <view class="workspace-tabs">
+          <button class="workspace-tabs__item workspace-tabs__item--active">会话</button>
+          <button class="workspace-tabs__item" hover-class="workspace-tabs__item--pressed" @tap="switchWorkspace">
+            我的
+          </button>
+        </view>
+
+        <button
+          class="workspace-unread"
+          :class="{
+            'workspace-unread--active': showUnreadPanel,
+            'workspace-unread--disabled': !unreadTotal
+          }"
+          hover-class="workspace-unread--pressed"
+          @tap="toggleUnreadPanel"
+        >
+          <view class="workspace-unread__copy">
+            <text class="workspace-unread__label">{{ showUnreadPanel ? '收起最近未读' : '查看最近未读' }}</text>
+            <text class="workspace-unread__text">{{ unreadPanelText }}</text>
+          </view>
+          <text v-if="unreadTotal" class="workspace-unread__badge">{{ unreadTotal > 99 ? '99+' : unreadTotal }}</text>
+          <text class="workspace-unread__arrow" :class="{ 'workspace-unread__arrow--open': showUnreadPanel }">⌄</text>
+        </button>
+      </view>
+    </view>
+
+    <view v-if="showUnreadPanel" class="unread-panel panel">
+      <view class="section-title">
+        <text class="section-title__main">最近未读</text>
+        <text class="section-title__sub">顶部单独展示，下面原排序保持不变</text>
+      </view>
+
+      <view v-if="unreadSessions.length" class="session-list session-list--unread">
+        <SessionCard
+          v-for="(session, index) in unreadSessions"
+          :key="`unread-${session.id}`"
+          class="session-list__item"
+          :style="{ animationDelay: `${index * 50}ms` }"
+          :session="session"
+          @select="openSession"
+        />
+      </view>
+
+      <view v-else class="unread-panel__empty">当前没有未读联系人。</view>
+    </view>
     <view class="section-title">
       <text class="section-title__main">最近会话</text>
       <text class="section-title__sub">下拉刷新，上拉继续加载</text>
@@ -43,24 +97,26 @@
     <view class="load-state">
       {{ loading && sessions.length ? '加载更多中...' : hasMore ? '继续下滑可加载更多' : '已经到底了' }}
     </view>
-
-    <BottomDock current="sessions" />
   </view>
 </template>
 
 <script setup>
-import { nextTick, ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { onPageScroll, onPullDownRefresh, onReachBottom, onShow, onUnload } from '@dcloudio/uni-app';
 import AppHeader from '@/components/AppHeader.vue';
-import BottomDock from '@/components/BottomDock.vue';
 import SessionCard from '@/components/SessionCard.vue';
+import { usePageReveal } from '@/composables/usePageReveal';
 import { usePagedSessions } from '@/composables/usePagedSessions';
-import { fetchProfile } from '@/mock';
+import { fetchProfile, primeConversationBundle, primeProfile } from '@/mock';
+import { navigateToPage, reLaunchPage } from '@/utils/navigation';
 
 const profile = ref(null);
 const initialized = ref(false);
+const showUnreadPanel = ref(false);
+const { pageRevealed } = usePageReveal();
 const {
   sessions,
+  unreadSessions,
   total,
   unreadTotal,
   activeCount,
@@ -72,6 +128,9 @@ const {
   loadMore
 } = usePagedSessions(6);
 const windowHeight = uni.getSystemInfoSync().windowHeight || 0;
+const unreadPanelText = computed(() =>
+  unreadTotal.value ? `最近有 ${unreadTotal.value} 条未读消息待处理` : '当前没有未读消息'
+);
 
 let loadMoreTimer = null;
 
@@ -116,10 +175,42 @@ function scheduleLoadMoreCheck(delay = 0) {
 }
 
 function openSession(session) {
-  uni.navigateTo({
-    url: `/pages/chat/index?conversationId=${session.id}`
-  });
+  primeConversationBundle(session.id);
+  primeProfile();
+  navigateToPage(`/pages/chat/index?conversationId=${session.id}`);
 }
+
+/**
+ * 从会话页切换到“我的”页面。
+ */
+function switchWorkspace() {
+  primeProfile();
+  reLaunchPage('/pages/profile/index');
+}
+
+/**
+ * 展开或收起最近未读区域，不改变主会话列表顺序。
+ */
+async function toggleUnreadPanel() {
+  if (!unreadTotal.value) {
+    showUnreadPanel.value = false;
+    uni.showToast({
+      title: '当前没有未读消息',
+      icon: 'none'
+    });
+    return;
+  }
+
+  showUnreadPanel.value = !showUnreadPanel.value;
+  await nextTick();
+  scheduleLoadMoreCheck(80);
+}
+
+watch(unreadTotal, (value) => {
+  if (!value) {
+    showUnreadPanel.value = false;
+  }
+});
 
 onShow(async () => {
   if (!initialized.value) {
@@ -159,7 +250,7 @@ onUnload(() => {
 
 <style scoped lang="scss">
 .sessions-page {
-  padding-bottom: 180rpx;
+  padding-bottom: 56rpx;
 }
 
 .hero {
@@ -228,10 +319,222 @@ onUnload(() => {
   color: var(--ink-soft);
 }
 
+.hero__stat-tip {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 18rpx;
+  line-height: 1.5;
+  color: rgba(91, 52, 23, 0.62);
+}
+
+.workspace-bar {
+  margin-bottom: 28rpx;
+  padding: 24rpx;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(243, 249, 245, 0.7));
+}
+
+.workspace-bar__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
+  margin-bottom: 20rpx;
+}
+
+.workspace-bar__copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.workspace-bar__eyebrow {
+  display: block;
+  font-size: 20rpx;
+  color: rgba(91, 52, 23, 0.66);
+}
+
+.workspace-bar__title {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.workspace-bar__note {
+  max-width: 260rpx;
+  font-size: 20rpx;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.workspace-bar__body {
+  display: flex;
+  align-items: stretch;
+  gap: 16rpx;
+}
+
+.workspace-tabs {
+  display: inline-flex;
+  gap: 8rpx;
+  padding: 8rpx;
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: inset 0 0 0 1rpx rgba(91, 52, 23, 0.06);
+}
+
+.workspace-tabs__item {
+  min-width: 132rpx;
+  height: 84rpx;
+  padding: 0 24rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
+  font-size: 26rpx;
+  font-weight: 700;
+  transition: transform 180ms ease, background 220ms ease, color 220ms ease, box-shadow 220ms ease;
+}
+
+.workspace-tabs__item--active {
+  background: linear-gradient(135deg, rgba(166, 222, 200, 0.96), rgba(241, 201, 143, 0.84));
+  color: var(--ink);
+  box-shadow: 0 14rpx 28rpx rgba(100, 70, 42, 0.12);
+}
+
+.workspace-tabs__item--pressed {
+  transform: scale(0.97);
+}
+
+.workspace-unread {
+  flex: 1;
+  min-width: 0;
+  height: 100rpx;
+  padding: 0 24rpx;
+  border-radius: 30rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1rpx rgba(91, 52, 23, 0.05);
+  transition: transform 180ms ease, background 220ms ease, box-shadow 220ms ease, opacity 180ms ease;
+}
+
+.workspace-unread--active {
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    inset 0 0 0 1rpx rgba(91, 52, 23, 0.05),
+    0 14rpx 28rpx rgba(96, 68, 45, 0.12);
+}
+
+.workspace-unread--disabled {
+  opacity: 0.72;
+}
+
+.workspace-unread--pressed {
+  transform: scale(0.98);
+}
+
+.workspace-unread__copy {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.workspace-unread__label {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.workspace-unread__text {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 20rpx;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workspace-unread__badge {
+  min-width: 46rpx;
+  height: 46rpx;
+  padding: 0 14rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #efb970, #de8653);
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.workspace-unread__arrow {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  color: var(--ink-soft);
+  transition: transform 220ms ease, color 220ms ease;
+}
+
+.workspace-unread__arrow--open {
+  transform: rotate(180deg);
+  color: var(--ink);
+}
+
+.unread-panel {
+  margin-bottom: 28rpx;
+  padding: 24rpx;
+}
+
+.unread-panel__empty {
+  padding: 18rpx 6rpx 4rpx;
+  font-size: 22rpx;
+  color: var(--ink-soft);
+}
+
 .session-list {
   display: flex;
   flex-direction: column;
   gap: 18rpx;
+}
+
+.session-list--unread {
+  gap: 16rpx;
+}
+
+@media screen and (max-width: 420px) {
+  .workspace-bar__head,
+  .workspace-bar__body {
+    flex-direction: column;
+  }
+
+  .workspace-bar__note {
+    max-width: none;
+    text-align: left;
+  }
+
+  .workspace-tabs {
+    width: 100%;
+  }
+
+  .workspace-tabs__item {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .workspace-unread {
+    width: 100%;
+    height: auto;
+    min-height: 96rpx;
+    padding: 18rpx 20rpx;
+  }
 }
 
 .session-list__item {

@@ -1,8 +1,8 @@
 <template>
-  <view class="screen contact-page">
+  <view class="screen contact-page page-reveal" :class="{ 'page-reveal--entered': pageRevealed }">
     <AppHeader title="联系人详情" subtitle="查看完整信息与状态" rightLabel="聊天" @action="openChat" />
 
-    <view v-if="contact" class="contact-card panel">
+    <view v-if="contact" class="contact-card panel contact-animate contact-animate--1">
       <AvatarBadge
         :name="contact.nickname"
         :palette="contact.palette"
@@ -20,7 +20,7 @@
       <text class="contact-card__motto">{{ contact.motto }}</text>
     </view>
 
-    <view v-if="contact" class="stats-grid">
+    <view v-if="contact" class="stats-grid contact-animate contact-animate--2">
       <view class="stats-grid__item panel">
         <text class="stats-grid__value">{{ contact.stats.conversations }}</text>
         <text class="stats-grid__label">累计会话</text>
@@ -35,7 +35,7 @@
       </view>
     </view>
 
-    <view v-if="contact" class="detail-panel panel">
+    <view v-if="contact" class="detail-panel panel contact-animate contact-animate--3">
       <view class="section-title">
         <text class="section-title__main">基础信息</text>
         <text class="section-title__sub">完整资料展示</text>
@@ -46,7 +46,7 @@
       </view>
     </view>
 
-    <view v-if="contact" class="detail-panel panel">
+    <view v-if="contact" class="detail-panel panel contact-animate contact-animate--4">
       <view class="section-title">
         <text class="section-title__main">标签与能力</text>
         <text class="section-title__sub">支持完整演示</text>
@@ -60,7 +60,7 @@
       <text class="contact-bio">{{ contact.bio }}</text>
     </view>
 
-    <view v-if="contact" class="detail-panel panel">
+    <view v-if="contact" class="detail-panel panel contact-animate contact-animate--5">
       <view class="section-title">
         <text class="section-title__main">互动备注</text>
         <text class="section-title__sub">页面支持返回与继续聊天</text>
@@ -71,7 +71,12 @@
       </view>
     </view>
 
-    <button v-if="contact" class="contact-action" hover-class="contact-action--active" @tap="openChat">
+    <button
+      v-if="contact"
+      class="contact-action contact-animate contact-animate--6"
+      hover-class="contact-action--active"
+      @tap="openChat"
+    >
       开始聊天
     </button>
   </view>
@@ -82,10 +87,13 @@ import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppHeader from '@/components/AppHeader.vue';
 import AvatarBadge from '@/components/AvatarBadge.vue';
-import { fetchContact, getConversationIdByContact } from '@/mock';
+import { usePageReveal } from '@/composables/usePageReveal';
+import { fetchContact, getConversationIdByContact, primeConversationBundle } from '@/mock';
+import { navigateToPage } from '@/utils/navigation';
 
 const contact = ref(null);
 const conversationId = ref('');
+const { pageRevealed } = usePageReveal();
 
 async function loadByContactId(contactId) {
   contact.value = await fetchContact(contactId);
@@ -99,9 +107,8 @@ function openChat() {
   if (!conversationId.value) {
     return;
   }
-  uni.navigateTo({
-    url: `/pages/chat/index?conversationId=${conversationId.value}`
-  });
+  primeConversationBundle(conversationId.value);
+  navigateToPage(`/pages/chat/index?conversationId=${conversationId.value}`);
 }
 
 onLoad(async (options) => {
@@ -114,6 +121,37 @@ onLoad(async (options) => {
 <style scoped lang="scss">
 .contact-page {
   padding-bottom: 48rpx;
+}
+
+.contact-animate {
+  opacity: 0;
+  transform: translate3d(0, 22rpx, 0);
+  animation: section-rise-in 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+.contact-animate--1 {
+  animation-delay: 40ms;
+}
+
+.contact-animate--2 {
+  animation-delay: 90ms;
+}
+
+.contact-animate--3 {
+  animation-delay: 140ms;
+}
+
+.contact-animate--4 {
+  animation-delay: 190ms;
+}
+
+.contact-animate--5 {
+  animation-delay: 240ms;
+}
+
+.contact-animate--6 {
+  animation-delay: 290ms;
 }
 
 .contact-card {
@@ -168,6 +206,19 @@ onLoad(async (options) => {
 .stats-grid__item {
   padding: 22rpx 18rpx;
   text-align: center;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.stats-grid__item:nth-child(1) {
+  animation: tile-rise-in 0.38s 0.14s ease both;
+}
+
+.stats-grid__item:nth-child(2) {
+  animation: tile-rise-in 0.38s 0.2s ease both;
+}
+
+.stats-grid__item:nth-child(3) {
+  animation: tile-rise-in 0.38s 0.26s ease both;
 }
 
 .stats-grid__value {
@@ -255,9 +306,34 @@ onLoad(async (options) => {
   font-size: 28rpx;
   font-weight: 700;
   box-shadow: var(--shadow-lift);
+  transition: transform 220ms ease, box-shadow 220ms ease, filter 220ms ease;
 }
 
 .contact-action--active {
   transform: scale(0.98);
+}
+
+@keyframes section-rise-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 22rpx, 0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes tile-rise-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 18rpx, 0) scale(0.97);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
 }
 </style>

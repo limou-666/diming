@@ -1,5 +1,5 @@
 <template>
-  <view class="bubble-row" :class="{ 'bubble-row--self': isSelf, 'bubble-row--fresh': message.isFresh }">
+  <view class="bubble-row" :class="rowClass">
     <view v-if="!isSelf" class="bubble-avatar" hover-class="bubble-avatar--active" @tap="handleAvatarClick">
       <AvatarBadge
         :name="contact.nickname"
@@ -58,12 +58,29 @@
           class="bubble-actions__item"
           :class="{
             'bubble-actions__item--selected': item.active,
-            'bubble-actions__item--busy': item.loading
+            'bubble-actions__item--busy': item.loading,
+            'bubble-actions__item--like': item.key === 'like'
           }"
           :hover-class="item.loading ? '' : 'bubble-actions__item--pressed'"
           @tap="handleFeedback(item)"
         >
-          {{ item.label }}
+          <template v-if="item.key === 'like'">
+            <text class="bubble-actions__icon" :class="{ 'bubble-actions__icon--active': item.active }">
+              {{ item.active ? '❤' : '♡' }}
+            </text>
+            <view class="bubble-actions__label-stack">
+              <text class="bubble-actions__label bubble-actions__label--base" :class="{ 'bubble-actions__label--hidden': item.active }">
+                {{ item.label }}
+              </text>
+              <text
+                class="bubble-actions__label bubble-actions__label--overlay"
+                :class="{ 'bubble-actions__label--visible': item.active }"
+              >
+                {{ item.activeLabel }}
+              </text>
+            </view>
+          </template>
+          <text v-else class="bubble-actions__label bubble-actions__label--single">{{ item.label }}</text>
         </view>
       </view>
 
@@ -111,11 +128,18 @@ const emit = defineEmits(['avatarclick', 'feedback', 'layoutchange']);
 
 const isSelf = computed(() => props.message.senderId === props.currentUser.id);
 const timeLabel = computed(() => formatChatTime(props.message.createdAt));
+const rowClass = computed(() => ({
+  'bubble-row--self': isSelf.value,
+  'bubble-row--fresh': props.message.isFresh,
+  'bubble-row--fresh-self': props.message.isFresh && isSelf.value,
+  'bubble-row--fresh-peer': props.message.isFresh && !isSelf.value
+}));
 const statusLabel = computed(() => (props.message.status === 'sending' ? '发送中' : '已发送'));
 const feedbackActions = computed(() => [
   {
     key: 'like',
-    label: props.message.liked ? '❤ 已喜欢' : '喜欢',
+    label: '喜欢',
+    activeLabel: '已喜欢',
     active: Boolean(props.message.liked),
     loading: false
   },
@@ -176,7 +200,15 @@ function notifyLayoutChange() {
 }
 
 .bubble-row--fresh {
-  animation: bubble-pop 0.36s ease;
+  will-change: transform, opacity;
+}
+
+.bubble-row--fresh-self {
+  animation: bubble-send-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.bubble-row--fresh-peer {
+  animation: bubble-receive-in 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .bubble-avatar {
@@ -215,9 +247,16 @@ function notifyLayoutChange() {
   min-width: 0;
   max-width: 100%;
   padding: 20rpx 22rpx;
+  position: relative;
+  overflow: hidden;
   border-radius: 30rpx 30rpx 30rpx 10rpx;
   background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 14rpx 34rpx rgba(94, 66, 41, 0.1);
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease,
+    opacity 180ms ease;
 }
 
 .bubble-wrap--self {
@@ -227,6 +266,16 @@ function notifyLayoutChange() {
 
 .bubble-wrap--sending {
   opacity: 0.72;
+}
+
+.bubble-wrap--sending::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.2) 46%, transparent 74%);
+  transform: translate3d(-118%, 0, 0);
+  animation: bubble-sheen 0.78s ease both;
+  pointer-events: none;
 }
 
 .bubble-text {
@@ -259,17 +308,41 @@ function notifyLayoutChange() {
   gap: 12rpx;
 }
 
+.bubble-row--fresh-peer .bubble-avatar {
+  animation: avatar-pop-in 0.3s 0.04s ease both;
+}
+
+.bubble-row--fresh-peer .bubble-actions {
+  animation: actions-pop-in 0.28s 0.12s ease both;
+}
+
 .bubble-actions__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
   padding: 10rpx 18rpx;
   border-radius: 999rpx;
   background: rgba(255, 255, 255, 0.72);
   font-size: 20rpx;
   color: var(--ink-soft);
+  overflow: hidden;
+  transition:
+    transform 180ms ease,
+    background 220ms ease,
+    color 220ms ease,
+    box-shadow 220ms ease,
+    opacity 180ms ease;
+}
+
+.bubble-actions__item--like {
+  min-width: 152rpx;
 }
 
 .bubble-actions__item--selected {
   background: rgba(241, 201, 143, 0.3);
   color: #7f4a2b;
+  box-shadow: 0 10rpx 24rpx rgba(127, 74, 43, 0.1);
 }
 
 .bubble-actions__item--busy {
@@ -278,6 +351,70 @@ function notifyLayoutChange() {
 
 .bubble-actions__item--pressed {
   transform: scale(0.97);
+}
+
+.bubble-actions__icon {
+  width: 22rpx;
+  flex-shrink: 0;
+  text-align: center;
+  color: rgba(138, 108, 87, 0.56);
+  transform: scale(0.84);
+  transition:
+    color 220ms ease,
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bubble-actions__icon--active {
+  color: #d77659;
+  transform: scale(1);
+  animation: liked-pop 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bubble-actions__label-stack {
+  position: relative;
+  width: 3em;
+  height: 1.4em;
+}
+
+.bubble-actions__label {
+  display: block;
+  font-size: 20rpx;
+  line-height: 1.4;
+}
+
+.bubble-actions__label--single {
+  white-space: nowrap;
+}
+
+.bubble-actions__label--base,
+.bubble-actions__label--overlay {
+  position: absolute;
+  inset: 0;
+  white-space: nowrap;
+  transition:
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bubble-actions__label--base {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.bubble-actions__label--hidden {
+  opacity: 0;
+  transform: translate3d(0, -8rpx, 0);
+}
+
+.bubble-actions__label--overlay {
+  opacity: 0;
+  transform: translate3d(0, 8rpx, 0);
+}
+
+.bubble-actions__label--visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
 }
 
 .bubble-time {
@@ -335,15 +472,91 @@ function notifyLayoutChange() {
   }
 }
 
-@keyframes bubble-pop {
+@keyframes bubble-send-in {
   0% {
-    transform: translateY(18rpx) scale(0.96);
+    transform: translate3d(22rpx, 14rpx, 0) scale(0.94);
+    opacity: 0;
+  }
+
+  68% {
+    transform: translate3d(-4rpx, 0, 0) scale(1.01);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bubble-receive-in {
+  0% {
+    transform: translate3d(-22rpx, 14rpx, 0) scale(0.94);
+    opacity: 0;
+  }
+
+  68% {
+    transform: translate3d(4rpx, 0, 0) scale(1.01);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes avatar-pop-in {
+  0% {
+    transform: scale(0.82);
     opacity: 0;
   }
 
   100% {
-    transform: translateY(0) scale(1);
+    transform: scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes actions-pop-in {
+  0% {
+    transform: translate3d(0, 8rpx, 0);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes bubble-sheen {
+  0% {
+    transform: translate3d(-118%, 0, 0);
+    opacity: 0;
+  }
+
+  24% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(118%, 0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes liked-pop {
+  0% {
+    transform: scale(0.72);
+  }
+
+  72% {
+    transform: scale(1.16);
+  }
+
+  100% {
+    transform: scale(1);
   }
 }
 </style>
