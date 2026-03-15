@@ -82,7 +82,7 @@ import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import AppHeader from '@/components/AppHeader.vue';
 import AvatarBadge from '@/components/AvatarBadge.vue';
-import { fetchContact, fetchConversationBundle, getConversationIdByContact } from '@/mock';
+import { fetchContact, getConversationIdByContact } from '@/mock';
 
 const contact = ref(null);
 const conversationId = ref('');
@@ -90,14 +90,6 @@ const conversationId = ref('');
 async function loadByContactId(contactId) {
   contact.value = await fetchContact(contactId);
   conversationId.value = getConversationIdByContact(contactId);
-}
-
-async function loadByConversationId(id) {
-  const bundle = await fetchConversationBundle(id);
-  if (bundle) {
-    contact.value = bundle.contact;
-    conversationId.value = bundle.conversation.id;
-  }
 }
 
 function openChat() {
@@ -115,11 +107,6 @@ function openChat() {
 onLoad(async (options) => {
   if (options?.contactId) {
     await loadByContactId(options.contactId);
-    return;
-  }
-
-  if (options?.conversationId) {
-    await loadByConversationId(options.conversationId);
   }
 });
 </script>

@@ -30,18 +30,17 @@
               <text class="chat-banner__text">支持文本与图片消息，发送后自动滚动，并保留轻量动画反馈。</text>
             </view>
 
-            <view v-for="message in messages" :id="`msg-${message.id}`" :key="message.id" class="chat-message">
+            <view v-for="message in messages" :key="message.id" class="chat-message">
               <ChatBubble
                 :message="message"
                 :contact="contact"
                 :current-user="currentUser"
+                @avatarclick="handleAvatarClick"
                 @layoutchange="handleBubbleLayoutChange"
               />
             </view>
 
-            <view id="scroll-bottom" class="chat-bottom-spacer">
-              <view class="chat-bottom-anchor" />
-            </view>
+            <view class="chat-bottom-spacer" />
           </scroll-view>
 
           <view class="composer panel">
@@ -89,7 +88,6 @@ import {
 const draft = ref('');
 const loading = ref(true);
 const conversationId = ref('');
-const conversation = ref(null);
 const contact = ref(null);
 const currentUser = ref(null);
 const messages = ref([]);
@@ -118,7 +116,6 @@ async function loadPage(id) {
     return;
   }
 
-  conversation.value = bundle.conversation;
   contact.value = bundle.contact;
   currentUser.value = profile;
   messages.value = bundle.messages;
@@ -184,6 +181,17 @@ function handleBubbleLayoutChange() {
   scheduleBottomSync(false, [40, 160, 320]);
 }
 
+function handleAvatarClick(payload) {
+  if (payload?.isSelf) {
+    uni.navigateTo({
+      url: '/pages/profile/index'
+    });
+    return;
+  }
+
+  openContact();
+}
+
 function handleSend() {
   const content = draft.value.trim();
   if (!content) {
@@ -223,7 +231,7 @@ function openContact() {
     return;
   }
   uni.navigateTo({
-    url: `/pages/contact/index?contactId=${contact.value.id}&conversationId=${conversationId.value}`
+    url: `/pages/contact/index?contactId=${contact.value.id}`
   });
 }
 
@@ -321,10 +329,6 @@ onUnload(() => {
 
 .chat-bottom-spacer {
   height: 24rpx;
-}
-
-.chat-bottom-anchor {
-  height: 1rpx;
 }
 
 .composer {

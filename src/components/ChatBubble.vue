@@ -1,21 +1,54 @@
 <template>
   <view class="bubble-row" :class="{ 'bubble-row--self': isSelf, 'bubble-row--fresh': message.isFresh }">
-    <AvatarBadge
-      v-if="!isSelf"
-      :name="contact.nickname"
-      :palette="contact.palette"
-      :accent="contact.accent"
-      :online="contact.status === '在线'"
-      :size="64"
-    />
+    <view v-if="!isSelf" class="bubble-avatar" hover-class="bubble-avatar--active" @tap="handleAvatarClick">
+      <AvatarBadge
+        :name="contact.nickname"
+        :palette="contact.palette"
+        :accent="contact.accent"
+        :online="contact.status === '在线'"
+        :size="64"
+      />
+    </view>
 
-    <view class="bubble-main">
-      <view class="bubble-wrap" :class="wrapClass">
-        <text v-if="message.type === 'text'" class="bubble-text">{{ message.content }}</text>
-        <view v-else class="bubble-image-card" @tap="previewImage">
-          <image class="bubble-image" :src="message.imageUrl" mode="aspectFill" lazy-load @load="notifyLayoutChange" @error="notifyLayoutChange" />
-          <text class="bubble-caption">{{ message.caption }}</text>
-        </view>
+    <view class="bubble-main" :class="{ 'bubble-main--self': isSelf }">
+      <view class="bubble-content" :class="{ 'bubble-content--self': isSelf }">
+        <template v-if="isSelf">
+          <text class="bubble-time bubble-time--inline">{{ timeLabel }}</text>
+
+          <view class="bubble-wrap" :class="wrapClass">
+            <text v-if="message.type === 'text'" class="bubble-text">{{ message.content }}</text>
+            <view v-else class="bubble-image-card" @tap="previewImage">
+              <image
+                class="bubble-image"
+                :src="message.imageUrl"
+                mode="aspectFill"
+                lazy-load
+                @load="notifyLayoutChange"
+                @error="notifyLayoutChange"
+              />
+              <text class="bubble-caption">{{ message.caption }}</text>
+            </view>
+          </view>
+        </template>
+
+        <template v-else>
+          <view class="bubble-wrap" :class="wrapClass">
+            <text v-if="message.type === 'text'" class="bubble-text">{{ message.content }}</text>
+            <view v-else class="bubble-image-card" @tap="previewImage">
+              <image
+                class="bubble-image"
+                :src="message.imageUrl"
+                mode="aspectFill"
+                lazy-load
+                @load="notifyLayoutChange"
+                @error="notifyLayoutChange"
+              />
+              <text class="bubble-caption">{{ message.caption }}</text>
+            </view>
+          </view>
+
+          <text class="bubble-time bubble-time--inline">{{ timeLabel }}</text>
+        </template>
       </view>
 
       <view v-if="message.feedback && !isSelf" class="bubble-actions">
@@ -30,19 +63,19 @@
         </view>
       </view>
 
-      <text class="bubble-time">
-        {{ timeLabel }}
-        <text v-if="isSelf">{{ message.status === 'sending' ? ' 发送中' : ' 已发送' }}</text>
-      </text>
+      <view v-if="isSelf" class="bubble-status" style="font-size: 10rpx; line-height: 1.2; opacity: 0.7;">
+        {{ statusLabel }}
+      </view>
     </view>
 
-    <AvatarBadge
-      v-if="isSelf"
-      :name="currentUser.nickname"
-      :palette="currentUser.palette"
-      :accent="currentUser.accent"
-      :size="64"
-    />
+    <view v-if="isSelf" class="bubble-avatar" hover-class="bubble-avatar--active" @tap="handleAvatarClick">
+      <AvatarBadge
+        :name="currentUser.nickname"
+        :palette="currentUser.palette"
+        :accent="currentUser.accent"
+        :size="64"
+      />
+    </view>
   </view>
 </template>
 
@@ -65,11 +98,13 @@ const props = defineProps({
     required: true
   }
 });
-const emit = defineEmits(['layoutchange']);
+
+const emit = defineEmits(['avatarclick', 'layoutchange']);
 
 const feedbackActions = ['喜欢', '再来一条'];
 const isSelf = computed(() => props.message.senderId === props.currentUser.id);
 const timeLabel = computed(() => formatChatTime(props.message.createdAt));
+const statusLabel = computed(() => (props.message.status === 'sending' ? '发送中' : '已发送'));
 const wrapClass = computed(() => ({
   'bubble-wrap--self': isSelf.value,
   'bubble-wrap--sending': props.message.status === 'sending'
@@ -89,6 +124,13 @@ function handleFeedback(label) {
   uni.showToast({
     title: `已${label}`,
     icon: 'none'
+  });
+}
+
+function handleAvatarClick() {
+  emit('avatarclick', {
+    isSelf: isSelf.value,
+    senderId: props.message.senderId
   });
 }
 
@@ -113,15 +155,42 @@ function notifyLayoutChange() {
   animation: bubble-pop 0.36s ease;
 }
 
+.bubble-avatar {
+  flex-shrink: 0;
+}
+
+.bubble-avatar--active {
+  transform: scale(0.96);
+}
+
 .bubble-main {
-  max-width: 72%;
+  max-width: 80%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 10rpx;
 }
 
+.bubble-main--self {
+  max-width: 86%;
+  align-items: flex-end;
+}
+
+.bubble-content {
+  display: flex;
+  align-items: flex-end;
+  gap: 12rpx;
+  min-width: 0;
+}
+
+.bubble-content--self {
+  justify-content: flex-end;
+}
+
 .bubble-wrap {
-  padding: 22rpx 24rpx;
+  min-width: 0;
+  max-width: 100%;
+  padding: 20rpx 22rpx;
   border-radius: 30rpx 30rpx 30rpx 10rpx;
   background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 14rpx 34rpx rgba(94, 66, 41, 0.1);
@@ -137,8 +206,8 @@ function notifyLayoutChange() {
 }
 
 .bubble-text {
-  font-size: 30rpx;
-  line-height: 1.65;
+  font-size: 28rpx;
+  line-height: 1.6;
   color: var(--ink);
 }
 
@@ -155,9 +224,9 @@ function notifyLayoutChange() {
 
 .bubble-caption {
   display: block;
-  margin-top: 18rpx;
-  font-size: 24rpx;
-  line-height: 1.6;
+  margin-top: 16rpx;
+  font-size: 22rpx;
+  line-height: 1.55;
   color: var(--ink);
 }
 
@@ -170,7 +239,7 @@ function notifyLayoutChange() {
   padding: 10rpx 18rpx;
   border-radius: 999rpx;
   background: rgba(255, 255, 255, 0.72);
-  font-size: 22rpx;
+  font-size: 20rpx;
   color: var(--ink-soft);
 }
 
@@ -179,13 +248,58 @@ function notifyLayoutChange() {
 }
 
 .bubble-time {
-  font-size: 20rpx;
+  flex-shrink: 0;
+  font-size: 18rpx;
+  line-height: 1.4;
   color: var(--ink-soft);
-  align-self: flex-start;
+  white-space: nowrap;
 }
 
-.bubble-row--self .bubble-time {
+.bubble-time--inline {
+  padding-bottom: 8rpx;
+}
+
+.bubble-status {
+  display: block;
+  font-size: 10rpx !important;
+  line-height: 1.2 !important;
+  color: var(--ink-soft);
+  opacity: 0.7;
   align-self: flex-end;
+}
+
+@media screen and (max-width: 420px) {
+  .bubble-main {
+    max-width: 84%;
+  }
+
+  .bubble-main--self {
+    max-width: 90%;
+  }
+
+  .bubble-content {
+    gap: 10rpx;
+  }
+
+  .bubble-wrap {
+    padding: 18rpx 20rpx;
+  }
+
+  .bubble-text {
+    font-size: 26rpx;
+  }
+
+  .bubble-caption {
+    font-size: 20rpx;
+  }
+
+  .bubble-time {
+    font-size: 17rpx;
+  }
+
+  .bubble-status {
+    font-size: 9rpx !important;
+  }
 }
 
 @keyframes bubble-pop {
@@ -193,6 +307,7 @@ function notifyLayoutChange() {
     transform: translateY(18rpx) scale(0.96);
     opacity: 0;
   }
+
   100% {
     transform: translateY(0) scale(1);
     opacity: 1;
