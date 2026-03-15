@@ -51,15 +51,19 @@
         </template>
       </view>
 
-      <view v-if="message.feedback && !isSelf" class="bubble-actions">
+      <view v-if="showFeedback && !isSelf" class="bubble-actions">
         <view
           v-for="item in feedbackActions"
-          :key="item"
+          :key="item.key"
           class="bubble-actions__item"
-          hover-class="bubble-actions__item--active"
+          :class="{
+            'bubble-actions__item--selected': item.active,
+            'bubble-actions__item--busy': item.loading
+          }"
+          :hover-class="item.loading ? '' : 'bubble-actions__item--pressed'"
           @tap="handleFeedback(item)"
         >
-          {{ item }}
+          {{ item.label }}
         </view>
       </view>
 
@@ -96,15 +100,32 @@ const props = defineProps({
   contact: {
     type: Object,
     required: true
+  },
+  showFeedback: {
+    type: Boolean,
+    default: false
   }
 });
 
-const emit = defineEmits(['avatarclick', 'layoutchange']);
+const emit = defineEmits(['avatarclick', 'feedback', 'layoutchange']);
 
-const feedbackActions = ['喜欢', '再来一条'];
 const isSelf = computed(() => props.message.senderId === props.currentUser.id);
 const timeLabel = computed(() => formatChatTime(props.message.createdAt));
 const statusLabel = computed(() => (props.message.status === 'sending' ? '发送中' : '已发送'));
+const feedbackActions = computed(() => [
+  {
+    key: 'like',
+    label: props.message.liked ? '❤ 已喜欢' : '喜欢',
+    active: Boolean(props.message.liked),
+    loading: false
+  },
+  {
+    key: 'reroll',
+    label: props.message.feedbackPending ? '生成中...' : '再来一条',
+    active: false,
+    loading: Boolean(props.message.feedbackPending)
+  }
+]);
 const wrapClass = computed(() => ({
   'bubble-wrap--self': isSelf.value,
   'bubble-wrap--sending': props.message.status === 'sending'
@@ -120,10 +141,13 @@ function previewImage() {
   });
 }
 
-function handleFeedback(label) {
-  uni.showToast({
-    title: `已${label}`,
-    icon: 'none'
+function handleFeedback(action) {
+  if (action.loading) {
+    return;
+  }
+  emit('feedback', {
+    action: action.key,
+    messageId: props.message.id
   });
 }
 
@@ -243,7 +267,16 @@ function notifyLayoutChange() {
   color: var(--ink-soft);
 }
 
-.bubble-actions__item--active {
+.bubble-actions__item--selected {
+  background: rgba(241, 201, 143, 0.3);
+  color: #7f4a2b;
+}
+
+.bubble-actions__item--busy {
+  opacity: 0.56;
+}
+
+.bubble-actions__item--pressed {
   transform: scale(0.97);
 }
 

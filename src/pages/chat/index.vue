@@ -35,7 +35,9 @@
                 :message="message"
                 :contact="contact"
                 :current-user="currentUser"
+                :show-feedback="message.id === latestFeedbackMessageId"
                 @avatarclick="handleAvatarClick"
+                @feedback="handleMessageFeedback"
                 @layoutchange="handleBubbleLayoutChange"
               />
             </view>
@@ -70,7 +72,7 @@
 </template>
 
 <script setup>
-import { nextTick, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import { onLoad, onUnload } from '@dcloudio/uni-app';
 import AppHeader from '@/components/AppHeader.vue';
 import ChatBubble from '@/components/ChatBubble.vue';
@@ -93,6 +95,21 @@ const currentUser = ref(null);
 const messages = ref([]);
 const scrollTop = ref(0);
 const scrollWithAnimation = ref(false);
+const latestFeedbackMessageId = computed(() => {
+  const currentUserId = currentUser.value?.id;
+  if (!currentUserId) {
+    return '';
+  }
+
+  for (let index = messages.value.length - 1; index >= 0; index -= 1) {
+    const message = messages.value[index];
+    if (message.senderId !== currentUserId && message.type === 'text') {
+      return message.id;
+    }
+  }
+
+  return '';
+});
 
 const imagePool = [
   { imageUrl: '/static/mock/book-future.svg', caption: '这张书单封面适合做图片消息演示。' },
@@ -103,6 +120,7 @@ const imagePool = [
 let imageIndex = 0;
 let replyTimer = null;
 let scrollTimers = [];
+let feedbackTimers = [];
 
 async function loadPage(id) {
   loading.value = true;
@@ -138,6 +156,21 @@ function clearFreshState(message) {
       status: 'sent'
     });
   }, 320);
+}
+
+function patchLocalMessage(messageId, patch = {}) {
+  const target = messages.value.find((item) => item.id === messageId);
+  if (target) {
+    Object.assign(target, patch);
+  }
+  patchMessage(conversationId.value, messageId, patch);
+}
+
+async function appendIncomingMessage(message) {
+  messages.value = messages.value.concat(message);
+  appendMessage(conversationId.value, message, { incrementUnread: false });
+  await scrollToBottom(false);
+  clearFreshState(message);
 }
 
 async function pushMessage(message, seedText = '') {
@@ -192,6 +225,40 @@ function handleAvatarClick(payload) {
   openContact();
 }
 
+function handleMessageFeedback(payload) {
+  const target = messages.value.find((item) => item.id === payload?.messageId);
+  if (!target || !contact.value) {
+    return;
+  }
+
+  if (payload.action === 'like') {
+    patchLocalMessage(target.id, {
+      liked: !target.liked
+    });
+    return;
+  }
+
+  if (payload.action !== 'reroll' || target.feedbackPending) {
+    return;
+  }
+
+  patchLocalMessage(target.id, {
+    feedbackPending: true
+  });
+
+  const timer = setTimeout(async () => {
+    const seedText = target.content || target.caption || '';
+    const reply = buildMockReply(contact.value.id, seedText);
+    await appendIncomingMessage(reply);
+    patchLocalMessage(target.id, {
+      feedbackPending: false
+    });
+    feedbackTimers = feedbackTimers.filter((item) => item !== timer);
+  }, 540);
+
+  feedbackTimers.push(timer);
+}
+
 function handleSend() {
   const content = draft.value.trim();
   if (!content) {
@@ -219,10 +286,7 @@ function scheduleReply(seedText) {
   }
   replyTimer = setTimeout(async () => {
     const reply = buildMockReply(contact.value.id, seedText);
-    messages.value = messages.value.concat(reply);
-    appendMessage(conversationId.value, reply, { incrementUnread: false });
-    await scrollToBottom(false);
-    clearFreshState(reply);
+    await appendIncomingMessage(reply);
   }, 960);
 }
 
@@ -244,6 +308,8 @@ onUnload(() => {
   if (replyTimer) {
     clearTimeout(replyTimer);
   }
+  feedbackTimers.forEach((timer) => clearTimeout(timer));
+  feedbackTimers = [];
   clearScrollTimers();
 });
 </script>
