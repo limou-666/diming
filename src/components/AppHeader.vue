@@ -52,6 +52,9 @@ const props = defineProps({
 
 const emit = defineEmits(['back', 'action', 'titleclick']);
 
+/**
+ * 优先按页面栈返回；栈不可用时再兜底回会话首页。
+ */
 function handleBack() {
   emit('back');
   const pages = getCurrentPages();
@@ -69,6 +72,9 @@ function handleBack() {
   }
 }
 
+/**
+ * 仅在标题被声明为可点击时透出点击事件。
+ */
 function handleTitleClick() {
   if (props.titleClickable) {
     emit('titleclick');

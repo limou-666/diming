@@ -3,6 +3,9 @@ import { onBeforeUnmount, onMounted } from 'vue';
 
 let cleanupViewportHeightSync = null;
 
+/**
+ * 在 H5 端同步当前可视高度到全局 CSS 变量，规避地址栏伸缩带来的视口跳动。
+ */
 function syncViewportHeight() {
   // #ifdef H5
   const viewportHeight = window.visualViewport?.height || window.innerHeight;
@@ -123,9 +126,25 @@ button::after {
   will-change: opacity, transform;
 }
 
+.page-reveal--workspace-return {
+  opacity: 0.74;
+  transform: translate3d(0, 10rpx, 0) scale(0.992);
+  filter: blur(8rpx) saturate(0.94);
+  transition:
+    opacity 260ms ease,
+    transform 420ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    filter 360ms ease;
+  will-change: opacity, transform, filter;
+}
+
 .page-reveal--entered {
   opacity: 1;
   transform: translate3d(0, 0, 0);
+}
+
+.page-reveal--workspace-return.page-reveal--entered {
+  transform: translate3d(0, 0, 0) scale(1);
+  filter: blur(0) saturate(1);
 }
 
 .section-title {
@@ -166,6 +185,10 @@ button::after {
     transform: none;
     transition: none;
     will-change: auto;
+  }
+
+  .page-reveal--workspace-return {
+    filter: none;
   }
 }
 </style>

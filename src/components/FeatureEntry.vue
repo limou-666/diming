@@ -4,11 +4,13 @@
     <view class="entry__body">
       <view class="entry__top">
         <text class="entry__label">{{ entry.label }}</text>
-        <text v-if="entry.count" class="entry__count">{{ entry.count }}</text>
       </view>
       <text class="entry__description">{{ entry.description }}</text>
     </view>
-    <text class="entry__arrow">›</text>
+    <view class="entry__aside">
+      <text v-if="entry.count" class="entry__count">{{ entry.count }}</text>
+      <text class="entry__arrow">›</text>
+    </view>
   </view>
 </template>
 
@@ -56,7 +58,6 @@ defineEmits(['select']);
 .entry__top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 20rpx;
 }
 
@@ -67,9 +68,16 @@ defineEmits(['select']);
 }
 
 .entry__count {
+  min-width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   flex-shrink: 0;
   font-size: 22rpx;
+  line-height: 1;
   color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
 }
 
 .entry__description {
@@ -79,8 +87,22 @@ defineEmits(['select']);
   color: var(--ink-soft);
 }
 
+.entry__aside {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex-shrink: 0;
+}
+
 .entry__arrow {
+  width: 24rpx;
+  height: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--ink-soft);
   font-size: 34rpx;
+  line-height: 1;
 }
 </style>

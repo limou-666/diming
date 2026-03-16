@@ -25,24 +25,32 @@
             :scroll-top="scrollTop"
             :scroll-with-animation="scrollWithAnimation"
           >
-            <view class="chat-banner panel">
-              <text class="chat-banner__title">{{ contact.motto }}</text>
-              <text class="chat-banner__text">支持文本与图片消息，发送后自动滚动，并保留轻量动画反馈。</text>
-            </view>
+            <view class="chat-scroll__content">
+              <view class="chat-banner panel">
+                <text class="chat-banner__title">{{ contact.motto }}</text>
+                <text class="chat-banner__text">支持文本与自选图片消息，发送后自动滚动，并保留轻量动画反馈。</text>
+              </view>
 
-            <view v-for="message in messages" :key="message.id" class="chat-message">
-              <ChatBubble
-                :message="message"
-                :contact="contact"
-                :current-user="currentUser"
-                :show-feedback="message.id === latestFeedbackMessageId"
-                @avatarclick="handleAvatarClick"
-                @feedback="handleMessageFeedback"
-                @layoutchange="handleBubbleLayoutChange"
-              />
-            </view>
+              <view
+                :key="`chat-messages-${layoutVersion}`"
+                class="chat-messages"
+                :class="{ 'chat-messages--anchored': composerAnchored }"
+              >
+                <view v-for="message in messages" :key="message.id" class="chat-message">
+                  <ChatBubble
+                    :message="message"
+                    :contact="contact"
+                    :current-user="currentUser"
+                    :show-feedback="message.id === latestFeedbackMessageId"
+                    @avatarclick="handleAvatarClick"
+                    @feedback="handleMessageFeedback"
+                    @layoutchange="handleBubbleLayoutChange"
+                  />
+                </view>
 
-            <view class="chat-bottom-spacer" />
+                <view class="chat-bottom-spacer" />
+              </view>
+            </view>
           </scroll-view>
 
           <view class="composer panel">
@@ -51,6 +59,7 @@
             </button>
             <input
               v-model="draft"
+              :focus="composerFocused"
               class="composer__input"
               type="text"
               maxlength="200"
@@ -59,6 +68,7 @@
               placeholder="输入消息，回车或点击发送"
               placeholder-class="composer__placeholder"
               @focus="handleComposerFocus"
+              @blur="handleComposerBlur"
               @confirm="handleSend"
             />
             <button class="composer__send" hover-class="composer__send--active" @tap="handleSend">
@@ -99,8 +109,22 @@ const currentUser = ref(null);
 const messages = ref([]);
 const scrollTop = ref(0);
 const scrollWithAnimation = ref(false);
+const composerFocused = ref(false);
+const composerAnchored = ref(false);
+const keyboardHeight = ref(0);
+const keyboardVisible = ref(false);
+const baseWindowHeight = ref(0);
+const currentWindowHeight = ref(0);
+const layoutVersion = ref(0);
 const { pageRevealed } = usePageReveal();
-// 反馈操作只挂在最新一条来自对方的文本消息上。
+const KEYBOARD_RESIZE_THRESHOLD = 80;
+const KEYBOARD_SYNC_DELAYS = [0, 80, 180, 320];
+const DEFAULT_SYNC_DELAYS = [80, 220, 420];
+const BLUR_SYNC_DELAYS = [0, 120, 260, 420, 620];
+
+/**
+ * 反馈操作只挂在最新一条来自对方的文本消息上。
+ */
 const latestFeedbackMessageId = computed(() => {
   const currentUserId = currentUser.value?.id;
   if (!currentUserId) {
@@ -117,16 +141,10 @@ const latestFeedbackMessageId = computed(() => {
   return '';
 });
 
-const imagePool = [
-  { imageUrl: '/static/mock/book-future.svg', caption: '这张书单封面适合做图片消息演示。' },
-  { imageUrl: '/static/mock/smart-city.svg', caption: '这张城市概念图可以模拟分享图片。' },
-  { imageUrl: '/static/mock/travel-board.svg', caption: '这张情绪板适合演示图片卡片。' }
-];
-
-let imageIndex = 0;
 let replyTimer = null;
 let scrollTimers = [];
 let feedbackTimers = [];
+let keyboardListenersBound = false;
 
 /**
  * 首次进入聊天页时并行加载会话数据和当前用户资料。
@@ -202,6 +220,13 @@ async function appendIncomingMessage(message) {
   clearFreshState(message);
 }
 
+/**
+ * 统一处理当前用户发送出的消息，追加到本地列表后按需安排自动回复。
+ *
+ * @param {Object} message 待发送的消息对象。
+ * @param {string} [seedText=''] 用于生成后续 mock 回复的种子文本。
+ * @returns {Promise<void>}
+ */
 async function pushMessage(message, seedText = '') {
   messages.value = messages.value.concat(message);
   appendMessage(conversationId.value, message, { incrementUnread: false });
@@ -221,18 +246,235 @@ function clearScrollTimers() {
 }
 
 /**
+ * 控制消息区是否贴底布局，并在退出贴底时强制重建列表布局。
+ *
+ * @param {boolean} nextValue 下一帧是否需要贴底。
+ */
+function setComposerAnchored(nextValue) {
+  const wasAnchored = composerAnchored.value;
+  if (composerAnchored.value === nextValue) {
+    return;
+  }
+
+  composerAnchored.value = nextValue;
+  if (wasAnchored && !nextValue) {
+    layoutVersion.value += 1;
+  }
+}
+
+/**
+ * 查询聊天滚动容器与内容区域尺寸，用于判断当前是否需要强制贴底。
+ *
+ * @returns {Promise<{ scrollRect?: UniApp.NodeInfo, contentRect?: UniApp.NodeInfo }>}
+ */
+function queryChatLayout() {
+  return new Promise((resolve) => {
+    const query = uni.createSelectorQuery();
+    query.select('.chat-scroll').boundingClientRect();
+    query.select('.chat-scroll__content').boundingClientRect();
+    query.exec((result) => {
+      resolve({
+        scrollRect: result?.[0],
+        contentRect: result?.[1]
+      });
+    });
+  });
+}
+
+/**
+ * 将平台回调里的尺寸值规整为非负整数像素。
+ *
+ * @param {number} value 原始尺寸值。
+ * @returns {number} 规整后的尺寸值。
+ */
+function normalizeDimension(value) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.round(value));
+}
+
+/**
+ * 兼容不同平台的 resize 回调结构，统一提取窗口高度。
+ *
+ * @param {Object | null} [snapshot=null] 平台回调提供的窗口尺寸快照。
+ * @returns {number} 当前可用的窗口高度。
+ */
+function getWindowHeight(snapshot = null) {
+  const resizeHeight = snapshot?.size?.windowHeight ?? snapshot?.windowHeight ?? snapshot?.height;
+  const normalizedResizeHeight = normalizeDimension(resizeHeight);
+  if (normalizedResizeHeight > 0) {
+    return normalizedResizeHeight;
+  }
+
+  if (typeof uni.getWindowInfo === 'function') {
+    const windowInfo = uni.getWindowInfo();
+    const normalizedWindowHeight = normalizeDimension(windowInfo?.windowHeight);
+    if (normalizedWindowHeight > 0) {
+      return normalizedWindowHeight;
+    }
+  }
+
+  if (typeof uni.getSystemInfoSync === 'function') {
+    const systemInfo = uni.getSystemInfoSync();
+    return normalizeDimension(systemInfo?.windowHeight);
+  }
+
+  return 0;
+}
+
+/**
+ * 同步键盘显隐和窗口高度状态，并在缺少键盘高度回调时用窗口缩小做兜底判断。
+ *
+ * @param {{ height?: number, windowHeight?: number }} [options={}] 当前键盘高度与窗口高度。
+ * @returns {boolean} 键盘当前是否处于可见状态。
+ */
+function syncKeyboardState({
+  height = keyboardHeight.value,
+  windowHeight = currentWindowHeight.value,
+  forceClosed = false
+} = {}) {
+  const nextKeyboardHeight = normalizeDimension(height);
+  const nextWindowHeight = normalizeDimension(windowHeight) || currentWindowHeight.value || getWindowHeight();
+  const hasBaseHeight = baseWindowHeight.value > 0;
+  const fallbackVisible = Boolean(
+    hasBaseHeight && nextWindowHeight && nextWindowHeight < baseWindowHeight.value - KEYBOARD_RESIZE_THRESHOLD
+  );
+  const nextVisible = forceClosed ? nextKeyboardHeight > 0 : nextKeyboardHeight > 0 || fallbackVisible;
+
+  keyboardHeight.value = nextKeyboardHeight;
+  currentWindowHeight.value = nextWindowHeight;
+  keyboardVisible.value = nextVisible;
+
+  if ((!hasBaseHeight && nextWindowHeight > 0 && !nextVisible) || (!nextVisible && nextWindowHeight > 0)) {
+    baseWindowHeight.value = nextWindowHeight;
+  }
+
+  return nextVisible;
+}
+
+/**
+ * 根据当前贴底状态同步滚动位置；内容不足一屏时会先重置滚动值以触发刷新。
+ *
+ * @param {boolean} [animated=true] 是否启用滚动动画。
+ * @returns {Promise<void>}
+ */
+async function syncBottomPosition(animated = true) {
+  const shouldAnchorToBottom = composerAnchored.value;
+  await nextTick();
+
+  if (!shouldAnchorToBottom) {
+    const { scrollRect, contentRect } = await queryChatLayout();
+    if (scrollRect && contentRect && contentRect.height <= scrollRect.height + 1) {
+      scrollWithAnimation.value = false;
+      scrollTop.value += 1;
+      await nextTick();
+      scrollTop.value = 0;
+      return;
+    }
+  }
+
+  scrollWithAnimation.value = animated && !keyboardVisible.value;
+  await nextTick();
+  scrollTop.value += 1000000;
+}
+
+/**
+ * 响应键盘高度变化，更新页面贴底态并安排后续滚动同步。
+ *
+ * @param {{ height?: number }} [event={}] 键盘高度变化事件。
+ */
+function handleKeyboardHeightChange(event = {}) {
+  const nextKeyboardHeight = normalizeDimension(event?.height);
+  const nextVisible = syncKeyboardState({
+    height: nextKeyboardHeight,
+    windowHeight: getWindowHeight(),
+    forceClosed: nextKeyboardHeight === 0
+  });
+  setComposerAnchored(nextVisible);
+  if (!nextVisible) {
+    composerFocused.value = false;
+  }
+  scheduleBottomSync(false, nextVisible ? KEYBOARD_SYNC_DELAYS : BLUR_SYNC_DELAYS);
+}
+
+/**
+ * 响应窗口尺寸变化，兼容键盘弹起或收起时的布局调整。
+ *
+ * @param {Object} [event={}] 平台 resize 事件快照。
+ */
+function handleWindowResize(event = {}) {
+  const nextWindowHeight = getWindowHeight(event);
+  const nextVisible = syncKeyboardState({
+    windowHeight: nextWindowHeight,
+    forceClosed: !composerAnchored.value
+  });
+  setComposerAnchored(nextVisible);
+  if (!nextVisible && keyboardHeight.value === 0) {
+    composerFocused.value = false;
+  }
+  scheduleBottomSync(false, nextVisible ? KEYBOARD_SYNC_DELAYS : BLUR_SYNC_DELAYS);
+}
+
+/**
+ * 注册键盘与窗口尺寸监听，并记录初始高度作为键盘判断基准。
+ */
+function bindKeyboardListeners() {
+  if (keyboardListenersBound) {
+    return;
+  }
+
+  const initialWindowHeight = getWindowHeight();
+  currentWindowHeight.value = initialWindowHeight;
+  baseWindowHeight.value = initialWindowHeight;
+  syncKeyboardState({
+    height: 0,
+    windowHeight: initialWindowHeight
+  });
+
+  if (typeof uni.onKeyboardHeightChange === 'function') {
+    uni.onKeyboardHeightChange(handleKeyboardHeightChange);
+  }
+
+  if (typeof uni.onWindowResize === 'function') {
+    uni.onWindowResize(handleWindowResize);
+  }
+
+  keyboardListenersBound = true;
+}
+
+/**
+ * 注销键盘与窗口尺寸监听，避免页面销毁后残留回调。
+ */
+function unbindKeyboardListeners() {
+  if (!keyboardListenersBound) {
+    return;
+  }
+
+  if (typeof uni.offKeyboardHeightChange === 'function') {
+    uni.offKeyboardHeightChange(handleKeyboardHeightChange);
+  }
+
+  if (typeof uni.offWindowResize === 'function') {
+    uni.offWindowResize(handleWindowResize);
+  }
+
+  keyboardListenersBound = false;
+}
+
+/**
  * 在多个时间点重复同步到底部，兼容图片加载和键盘弹起造成的高度变化。
  *
  * @param {boolean} [animated=true] 是否启用滚动动画。
  * @param {number[]} [delays=[80]] 每次同步的延迟时间。
  */
-function scheduleBottomSync(animated = true, delays = [80]) {
+function scheduleBottomSync(animated = true, delays = DEFAULT_SYNC_DELAYS) {
   clearScrollTimers();
+  const nextAnimated = animated && !keyboardVisible.value;
   scrollTimers = delays.map((delay) =>
-    setTimeout(async () => {
-      scrollWithAnimation.value = animated;
-      await nextTick();
-      scrollTop.value += 1000000;
+    setTimeout(() => {
+      syncBottomPosition(nextAnimated);
     }, delay)
   );
 }
@@ -244,20 +486,54 @@ function scheduleBottomSync(animated = true, delays = [80]) {
  * @returns {Promise<void>}
  */
 async function scrollToBottom(animated = true) {
-  scrollWithAnimation.value = animated;
-  await nextTick();
-  scrollTop.value += 1000000;
-  scheduleBottomSync(animated, [80, 220, 420]);
+  const nextAnimated = animated && !keyboardVisible.value;
+  await syncBottomPosition(nextAnimated);
+  scheduleBottomSync(nextAnimated, DEFAULT_SYNC_DELAYS);
 }
 
+/**
+ * 输入框聚焦时先同步一次窗口状态，再安排多次贴底兜底。
+ */
 function handleComposerFocus() {
-  scheduleBottomSync(false, [120, 260, 420]);
+  composerFocused.value = true;
+  syncKeyboardState({
+    windowHeight: getWindowHeight()
+  });
+  scheduleBottomSync(false, KEYBOARD_SYNC_DELAYS);
 }
 
+/**
+ * 输入框失焦后逐步关闭贴底状态，兼容不同平台键盘收起节奏。
+ */
+function handleComposerBlur() {
+  composerFocused.value = false;
+  setComposerAnchored(false);
+  clearScrollTimers();
+  scrollTimers = BLUR_SYNC_DELAYS.map((delay) =>
+    setTimeout(() => {
+      syncKeyboardState({
+        height: 0,
+        windowHeight: getWindowHeight(),
+        forceClosed: true
+      });
+      setComposerAnchored(false);
+      syncBottomPosition(false);
+    }, delay)
+  );
+}
+
+/**
+ * 气泡内容高度变化时重新安排贴底同步，主要用于图片消息加载完成后。
+ */
 function handleBubbleLayoutChange() {
-  scheduleBottomSync(false, [40, 160, 320]);
+  scheduleBottomSync(false, KEYBOARD_SYNC_DELAYS);
 }
 
+/**
+ * 根据点击的是自己还是对方头像，跳转到对应的资料页。
+ *
+ * @param {{ isSelf?: boolean }} payload 头像点击事件透传的数据。
+ */
 function handleAvatarClick(payload) {
   if (payload?.isSelf) {
     primeProfile();
@@ -307,6 +583,9 @@ function handleMessageFeedback(payload) {
   feedbackTimers.push(timer);
 }
 
+/**
+ * 发送当前输入框中的文本消息；空内容时直接提示并终止。
+ */
 function handleSend() {
   const content = draft.value.trim();
   if (!content) {
@@ -321,11 +600,68 @@ function handleSend() {
   pushMessage(message, content);
 }
 
-function sendImage() {
-  const asset = imagePool[imageIndex % imagePool.length];
-  imageIndex += 1;
-  const message = buildOutgoingImageMessage(asset.imageUrl, asset.caption, currentUser.value.id);
-  pushMessage(message, asset.caption);
+/**
+ * 调起系统选图面板，允许用户从相册或相机中选择一张图片。
+ *
+ * @returns {Promise<{ tempFilePaths?: string[], tempFiles?: Array }>}
+ */
+function chooseUserImage() {
+  return new Promise((resolve, reject) => {
+    uni.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: resolve,
+      fail: reject
+    });
+  });
+}
+
+/**
+ * 基于用户所选文件生成一条简短的图片说明，避免直接展示过长文件名。
+ *
+ * @param {string} filePath 本地临时图片路径。
+ * @param {string} [fileName=''] 选图接口返回的原始文件名。
+ * @returns {string} 用于图片消息卡片展示的说明文字。
+ */
+function buildSelectedImageCaption(filePath, fileName = '') {
+  const sourceName = fileName || filePath.split('/').pop() || '';
+  const normalizedName = sourceName.replace(/\.[^.]+$/, '').trim();
+  if (!normalizedName) {
+    return '我上传了一张图片';
+  }
+
+  const shortName = normalizedName.length > 12 ? `${normalizedName.slice(0, 12)}...` : normalizedName;
+  return `图片：${shortName}`;
+}
+
+/**
+ * 发送用户自行选择的图片，不再使用固定 mock 图片池。
+ *
+ * @returns {Promise<void>}
+ */
+async function sendImage() {
+  try {
+    const result = await chooseUserImage();
+    const imageUrl = result?.tempFilePaths?.[0];
+    if (!imageUrl) {
+      return;
+    }
+
+    const caption = buildSelectedImageCaption(imageUrl, result?.tempFiles?.[0]?.name);
+    const message = buildOutgoingImageMessage(imageUrl, caption, currentUser.value.id);
+    await pushMessage(message, caption);
+  } catch (error) {
+    const errorMessage = String(error?.errMsg || error?.message || '');
+    if (errorMessage.toLowerCase().includes('cancel')) {
+      return;
+    }
+
+    uni.showToast({
+      title: '选图失败，请重试',
+      icon: 'none'
+    });
+  }
 }
 
 /**
@@ -343,6 +679,9 @@ function scheduleReply(seedText) {
   }, 960);
 }
 
+/**
+ * 打开当前聊天对象的联系人资料页。
+ */
 function openContact() {
   if (!contact.value) {
     return;
@@ -352,6 +691,7 @@ function openContact() {
 }
 
 onLoad(async (options) => {
+  bindKeyboardListeners();
   conversationId.value = options?.conversationId || 'cv_001';
   await loadPage(conversationId.value);
 });
@@ -363,6 +703,7 @@ onUnload(() => {
   feedbackTimers.forEach((timer) => clearTimeout(timer));
   feedbackTimers = [];
   clearScrollTimers();
+  unbindKeyboardListeners();
 });
 </script>
 
@@ -418,6 +759,23 @@ onUnload(() => {
   flex: 1;
   height: 0;
   min-height: 0;
+}
+
+.chat-scroll__content {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages--anchored {
+  justify-content: flex-end;
 }
 
 .chat-banner {

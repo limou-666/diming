@@ -95,11 +95,20 @@ const contact = ref(null);
 const conversationId = ref('');
 const { pageRevealed } = usePageReveal();
 
+/**
+ * 根据联系人 ID 加载详情，并同步解析关联的会话 ID。
+ *
+ * @param {string} contactId 联系人 ID。
+ * @returns {Promise<void>}
+ */
 async function loadByContactId(contactId) {
   contact.value = await fetchContact(contactId);
   conversationId.value = getConversationIdByContact(contactId);
 }
 
+/**
+ * 进入当前联系人的聊天页；必要时先兜底解析会话 ID。
+ */
 function openChat() {
   if (!conversationId.value && contact.value) {
     conversationId.value = getConversationIdByContact(contact.value.id);

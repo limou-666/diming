@@ -1,6 +1,6 @@
 <template>
   <view class="screen profile-page page-reveal" :class="{ 'page-reveal--entered': pageRevealed }">
-    <AppHeader title="个人中心" subtitle="当前用户信息与功能入口" />
+    <AppHeader title="个人中心" subtitle="当前用户信息与功能入口" @back="handleBackTransition" />
 
     <view v-if="profile" class="profile-hero panel profile-animate profile-animate--1">
       <AvatarBadge
@@ -44,7 +44,7 @@
           <text class="quick-contacts__meta">{{ contact.role }}</text>
         </view>
         <button class="quick-contacts__button" hover-class="quick-contacts__button--active" @tap.stop="openChat(contact)">
-          聊天
+          <text class="quick-contacts__button-text">聊天</text>
         </button>
       </view>
     </view>
@@ -80,33 +80,71 @@ import FeatureEntry from '@/components/FeatureEntry.vue';
 import { usePageReveal } from '@/composables/usePageReveal';
 import { fetchContactsByIds, fetchProfile, getConversationIdByContact, primeContact, primeConversationBundle } from '@/mock';
 import { navigateToPage } from '@/utils/navigation';
+import { markWorkspaceTransition } from '@/utils/workspaceTransition';
 
 const profile = ref(null);
 const quickContacts = ref([]);
 const { pageRevealed } = usePageReveal();
 
+/**
+ * 加载个人资料页所需的用户信息和快捷联系人列表。
+ *
+ * @returns {Promise<void>}
+ */
 async function loadPage() {
   const profileData = await fetchProfile();
   profile.value = profileData;
   quickContacts.value = await fetchContactsByIds(profileData.quickContacts || []);
 }
 
+/**
+ * 预热联系人详情后进入联系人资料页。
+ *
+ * @param {{ id: string }} contact 目标联系人。
+ */
 function openContact(contact) {
   primeContact(contact.id);
   navigateToPage(`/pages/contact/index?contactId=${contact.id}`);
 }
 
+/**
+ * 根据联系人反查会话并进入聊天页。
+ *
+ * @param {{ id: string }} contact 目标联系人。
+ */
 function openChat(contact) {
   const conversationId = getConversationIdByContact(contact.id);
   primeConversationBundle(conversationId);
   navigateToPage(`/pages/chat/index?conversationId=${conversationId}`);
 }
 
+/**
+ * 处理功能入口点击，这里统一给出前端演示提示。
+ *
+ * @param {{ label: string }} entry 被点击的功能入口。
+ */
 function handleEntryClick(entry) {
   uni.showToast({
     title: `${entry.label} 仅做前端演示`,
     icon: 'none'
   });
+}
+
+/**
+ * 在从“我的”页返回会话页时写入一次性切换上下文，供会话页选择回场动画。
+ */
+function handleBackTransition() {
+  const pages = getCurrentPages();
+  const previousRoute = pages[pages.length - 2]?.route;
+  const currentRoute = pages[pages.length - 1]?.route;
+
+  if (previousRoute === 'pages/sessions/index' || (pages.length === 1 && currentRoute === 'pages/profile/index')) {
+    markWorkspaceTransition({
+      from: 'profile',
+      to: 'sessions',
+      variant: 'workspace-return'
+    });
+  }
 }
 
 onShow(() => {
@@ -263,14 +301,25 @@ onShow(() => {
   width: 110rpx;
   height: 74rpx;
   border-radius: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16rpx;
   background: rgba(255, 255, 255, 0.72);
   color: var(--ink);
-  font-size: 24rpx;
+  line-height: 1;
   transition: transform 180ms ease, background 220ms ease;
 }
 
 .quick-contacts__button--active {
   transform: scale(0.96);
+}
+
+.quick-contacts__button-text {
+  display: block;
+  white-space: nowrap;
+  font-size: 24rpx;
+  line-height: 1.2;
 }
 
 .profile-footnote {

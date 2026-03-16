@@ -32,14 +32,29 @@ const props = defineProps({
   }
 });
 
+/**
+ * 抹平空值和首尾空格，保证后续头像文案计算基于稳定输入。
+ *
+ * @param {string} value 原始名称。
+ * @returns {string} 清洗后的名称文本。
+ */
 function normalizeName(value) {
   return `${value || ''}`.trim();
 }
 
+/**
+ * 判断当前名称是否只包含英文字母、数字和空格。
+ *
+ * @param {string} value 待判断的名称文本。
+ * @returns {boolean} 是否属于纯 ASCII 单词组合。
+ */
 function isAsciiWord(value) {
   return /^[A-Za-z0-9\s]+$/.test(value);
 }
 
+/**
+ * 英文名优先取缩写，中文名直接取前两个字，保证头像文本稳定。
+ */
 function toInitials(value) {
   const normalized = normalizeName(value);
   if (!normalized) {
@@ -57,6 +72,12 @@ function toInitials(value) {
   return normalized.slice(0, 2);
 }
 
+/**
+ * 从组件传入的尺寸值中解析出数值部分，统一作为响应式换算基准。
+ *
+ * @param {number | string} value 组件尺寸入参。
+ * @returns {number} 解析后的数值尺寸。
+ */
 function parseSize(value) {
   if (typeof value === 'number') {
     return value;
@@ -67,14 +88,29 @@ function parseSize(value) {
 
 const viewportWidth = useViewportWidth();
 
+/**
+ * 将设计稿中的 `rpx` 数值转换成当前视口下的像素值。
+ *
+ * @param {number | string} value `rpx` 数值。
+ * @returns {number} 换算后的像素值。
+ */
 function rpxToPx(value) {
   return (Number(value) * viewportWidth.value) / 750;
 }
 
+/**
+ * 统一生成保留两位小数的像素字符串。
+ *
+ * @param {number} value 数值型像素值。
+ * @returns {string} 可直接用于内联样式的像素字符串。
+ */
 function formatPx(value) {
   return `${Math.round(value * 100) / 100}px`;
 }
 
+/**
+ * 把组件尺寸统一转换成最终可直接用于样式的响应式值。
+ */
 function toResponsiveSize(value) {
   if (typeof value === 'number') {
     return formatPx(rpxToPx(value));

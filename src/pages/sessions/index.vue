@@ -1,5 +1,11 @@
 <template>
-  <view class="screen sessions-page page-reveal" :class="{ 'page-reveal--entered': pageRevealed }">
+  <view
+    class="screen sessions-page page-reveal"
+    :class="[
+      { 'page-reveal--entered': pageRevealed },
+      revealMode !== 'default' ? `page-reveal--${revealMode}` : ''
+    ]"
+  >
     <AppHeader title="对话仓库" subtitle="把灵感聊清楚，也把细节做顺滑" :showBack="false" />
 
     <view class="hero panel">
@@ -79,13 +85,13 @@
       <text class="section-title__sub">下拉刷新，上拉继续加载</text>
     </view>
 
-    <view v-if="!sessions.length && loading" class="skeleton-list">
+    <view v-if="!visibleSessions.length && loading" class="skeleton-list">
       <view v-for="item in 4" :key="item" class="skeleton panel" />
     </view>
 
-    <view v-else class="session-list">
+    <view v-else-if="visibleSessions.length" class="session-list">
       <SessionCard
-        v-for="(session, index) in sessions"
+        v-for="(session, index) in visibleSessions"
         :key="session.id"
         class="session-list__item"
         :style="{ animationDelay: `${index * 60}ms` }"
@@ -94,8 +100,12 @@
       />
     </view>
 
+    <view v-else class="session-list-empty panel">
+      {{ showUnreadPanel ? '当前页里的未读会话已在上方展示。' : '当前没有可展示的会话。' }}
+    </view>
+
     <view class="load-state">
-      {{ loading && sessions.length ? '加载更多中...' : hasMore ? '继续下滑可加载更多' : '已经到底了' }}
+      {{ loading && visibleSessions.length ? '加载更多中...' : hasMore ? '继续下滑可加载更多' : '已经到底了' }}
     </view>
   </view>
 </template>
@@ -108,12 +118,15 @@ import SessionCard from '@/components/SessionCard.vue';
 import { usePageReveal } from '@/composables/usePageReveal';
 import { usePagedSessions } from '@/composables/usePagedSessions';
 import { fetchProfile, primeConversationBundle, primeProfile } from '@/mock';
-import { navigateToPage, reLaunchPage } from '@/utils/navigation';
+import { navigateToPage } from '@/utils/navigation';
+import { consumeWorkspaceTransition } from '@/utils/workspaceTransition';
 
 const profile = ref(null);
 const initialized = ref(false);
 const showUnreadPanel = ref(false);
-const { pageRevealed } = usePageReveal();
+const { pageRevealed, revealMode } = usePageReveal({
+  resolveMode: resolveRevealMode
+});
 const {
   sessions,
   unreadSessions,
@@ -131,13 +144,33 @@ const windowHeight = uni.getSystemInfoSync().windowHeight || 0;
 const unreadPanelText = computed(() =>
   unreadTotal.value ? `最近有 ${unreadTotal.value} 条未读消息待处理` : '当前没有未读消息'
 );
+const hiddenSessionIds = computed(() =>
+  showUnreadPanel.value ? new Set(unreadSessions.value.map((item) => item.id)) : null
+);
+const visibleSessions = computed(() => {
+  if (!hiddenSessionIds.value) {
+    return sessions.value;
+  }
+
+  return sessions.value.filter((item) => !hiddenSessionIds.value.has(item.id));
+});
 
 let loadMoreTimer = null;
 
+/**
+ * 读取当前用户资料，用于顶部欢迎区展示。
+ *
+ * @returns {Promise<void>}
+ */
 async function loadProfile() {
   profile.value = await fetchProfile();
 }
 
+/**
+ * 页面首屏初始化时并行加载会话列表和当前用户资料。
+ *
+ * @returns {Promise<void>}
+ */
 async function bootstrap() {
   await Promise.all([loadInitial(), loadProfile()]);
   await nextTick();
@@ -145,6 +178,9 @@ async function bootstrap() {
   initialized.value = true;
 }
 
+/**
+ * 清理延迟触发的自动加载检测定时器。
+ */
 function clearLoadMoreTimer() {
   if (loadMoreTimer) {
     clearTimeout(loadMoreTimer);
@@ -152,6 +188,11 @@ function clearLoadMoreTimer() {
   }
 }
 
+/**
+ * 延迟检查“加载更多”提示是否已进入视口，必要时自动触发下一页加载。
+ *
+ * @param {number} [delay=0] 执行检测前的延迟时间。
+ */
 function scheduleLoadMoreCheck(delay = 0) {
   clearLoadMoreTimer();
   loadMoreTimer = setTimeout(() => {
@@ -174,6 +215,11 @@ function scheduleLoadMoreCheck(delay = 0) {
   }, delay);
 }
 
+/**
+ * 预热聊天页数据后进入指定会话详情。
+ *
+ * @param {{ id: string }} session 当前点击的会话对象。
+ */
 function openSession(session) {
   primeConversationBundle(session.id);
   primeProfile();
@@ -181,11 +227,26 @@ function openSession(session) {
 }
 
 /**
+ * 根据最近一次工作区切换记录决定页面回场动画模式。
+ *
+ * @returns {string} 当前页面应使用的 reveal 模式。
+ */
+function resolveRevealMode() {
+  const transition = consumeWorkspaceTransition({
+    from: 'profile',
+    to: 'sessions',
+    variant: 'workspace-return'
+  });
+
+  return transition ? transition.variant : 'default';
+}
+
+/**
  * 从会话页切换到“我的”页面。
  */
 function switchWorkspace() {
   primeProfile();
-  reLaunchPage('/pages/profile/index');
+  navigateToPage('/pages/profile/index');
 }
 
 /**
@@ -352,22 +413,6 @@ onUnload(() => {
   color: rgba(91, 52, 23, 0.66);
 }
 
-.workspace-bar__title {
-  display: block;
-  margin-top: 8rpx;
-  font-size: 28rpx;
-  font-weight: 700;
-  color: var(--ink);
-}
-
-.workspace-bar__note {
-  max-width: 260rpx;
-  font-size: 20rpx;
-  line-height: 1.55;
-  color: var(--ink-soft);
-  text-align: right;
-}
-
 .workspace-bar__body {
   display: flex;
   align-items: stretch;
@@ -515,11 +560,6 @@ onUnload(() => {
     flex-direction: column;
   }
 
-  .workspace-bar__note {
-    max-width: none;
-    text-align: left;
-  }
-
   .workspace-tabs {
     width: 100%;
   }
@@ -551,6 +591,13 @@ onUnload(() => {
   height: 158rpx;
   position: relative;
   overflow: hidden;
+}
+
+.session-list-empty {
+  padding: 28rpx 24rpx;
+  font-size: 24rpx;
+  line-height: 1.7;
+  color: var(--ink-soft);
 }
 
 .skeleton::after {

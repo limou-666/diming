@@ -20,6 +20,11 @@ function getViewportWidth() {
   }
 }
 
+/**
+ * 把最新视口宽度同步到共享响应式状态中。
+ *
+ * @returns {void}
+ */
 function syncViewportWidth() {
   viewportWidth.value = getViewportWidth();
 }

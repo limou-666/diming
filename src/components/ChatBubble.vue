@@ -84,7 +84,7 @@
         </view>
       </view>
 
-      <view v-if="isSelf" class="bubble-status" style="font-size: 10rpx; line-height: 1.2; opacity: 0.7;">
+      <view v-if="isSelf" class="bubble-status">
         {{ statusLabel }}
       </view>
     </view>
@@ -155,6 +155,9 @@ const wrapClass = computed(() => ({
   'bubble-wrap--sending': props.message.status === 'sending'
 }));
 
+/**
+ * 预览当前图片消息，交给系统图片查看器展示大图。
+ */
 function previewImage() {
   if (!props.message.imageUrl) {
     return;
@@ -165,6 +168,11 @@ function previewImage() {
   });
 }
 
+/**
+ * 统一处理气泡下方的反馈动作点击，并向父组件透传必要信息。
+ *
+ * @param {{ key: string, loading?: boolean }} action 当前点击的反馈动作。
+ */
 function handleFeedback(action) {
   if (action.loading) {
     return;
@@ -175,13 +183,18 @@ function handleFeedback(action) {
   });
 }
 
+/**
+ * 通知父组件当前点击的是自己还是对方头像。
+ */
 function handleAvatarClick() {
   emit('avatarclick', {
-    isSelf: isSelf.value,
-    senderId: props.message.senderId
+    isSelf: isSelf.value
   });
 }
 
+/**
+ * 图片加载后气泡高度可能变化，需要通知聊天页重新对齐到底部。
+ */
 function notifyLayoutChange() {
   emit('layoutchange');
 }

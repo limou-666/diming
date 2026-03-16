@@ -18,7 +18,10 @@
     {
       "path": "pages/chat/index",
       "style": {
-        "disableScroll": true
+        "disableScroll": true,
+        "app-plus": {
+          "softinputMode": "adjustResize"
+        }
       }
     },
     {
